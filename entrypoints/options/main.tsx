@@ -4,6 +4,7 @@ import { call } from '../../src/core/messages';
 import { isValidPattern } from '../../src/core/rules';
 import { SESSION_COLORS, newId, type AppState, type Rule, type Session, type SessionColor } from '../../src/core/types';
 import { mountGlassScroll } from '../../src/ui/scroll';
+import { Select } from '../../src/ui/Select';
 import { draftSession } from '../../src/ui/sessions';
 import { isFirefox, useAppState } from '../../src/ui/useAppState';
 import '../../src/ui/theme.css';
@@ -274,14 +275,15 @@ function Rules({ state }: { state: AppState }) {
                   onInput={(e) => patch(r.id, { pattern: e.currentTarget.value })}
                 />
               </label>
-              <label class="cell">
+              <div class="cell">
                 <span class="cell-label">Session</span>
-                <select value={r.sessionId} onChange={(e) => patch(r.id, { sessionId: e.currentTarget.value })}>
-                  {state.sessions.map((s) => (
-                    <option key={s.id} value={s.id}>{s.name}</option>
-                  ))}
-                </select>
-              </label>
+                <Select
+                  label="Session"
+                  value={r.sessionId}
+                  options={state.sessions.map((s) => ({ value: s.id, label: s.name, color: SESSION_COLORS[s.color] }))}
+                  onChange={(v) => patch(r.id, { sessionId: v })}
+                />
+              </div>
               <label class="cell prio">
                 <span class="cell-label">Priority</span>
                 <input type="number" title="Higher wins" value={r.priority} onInput={(e) => patch(r.id, { priority: Number(e.currentTarget.value) || 0 })} />
@@ -299,7 +301,7 @@ function Rules({ state }: { state: AppState }) {
 
 function Toggle({ checked, onChange, title, children }: { checked: boolean; onChange: (v: boolean) => void; title: string; children: ComponentChildren }) {
   return (
-    <label class="toggle">
+    <label class={`toggle ${checked ? 'on' : ''}`}>
       <span class="grow">
         <strong>{title}</strong>
         <span class="muted">{children}</span>
@@ -310,30 +312,90 @@ function Toggle({ checked, onChange, title, children }: { checked: boolean; onCh
   );
 }
 
+/** A mock tab strip showing what the current preferences do to a session's tabs. */
+function TabPreview({ state }: { state: AppState }) {
+  const { tabGroups, faviconBadge, titlePrefix, inheritOpener } = state.prefs;
+  const s = state.sessions[0] ?? { name: 'Admin', tag: 'ADM', color: 'blue' as SessionColor };
+  const lamp = SESSION_COLORS[s.color];
+  const tab = (title: string, site: string, inSession: boolean, current = false) => (
+    <div class={`mock-tab ${current ? 'current' : ''}`} style={inSession && tabGroups ? { '--group': lamp } : undefined}>
+      <span class="mock-fav" data-site={site}>
+        {site}
+        {inSession && faviconBadge && <span class="mock-lamp" style={{ background: lamp }} />}
+      </span>
+      <span class="truncate">
+        {inSession && titlePrefix && <b>[{s.tag}] </b>}
+        {title}
+      </span>
+    </div>
+  );
+  return (
+    <aside class="preview plate" aria-label="Preview">
+      <div class="row">
+        <h3 class="grow">Preview</h3>
+        <span class="stamp">Live</span>
+      </div>
+      <p class="muted">Two tabs in <strong>{s.name}</strong> and one ordinary tab, with your current settings.</p>
+      <div class="mock-window">
+        <div class="mock-strip">
+          {tabGroups && (
+            <span class="mock-group" style={{ background: lamp }}>
+              {s.name}
+            </span>
+          )}
+          {tab('Home', 'H', true, true)}
+          {tab('Docs', 'D', inheritOpener)}
+          {tab('Mail', 'M', false)}
+        </div>
+        <div class="mock-page">
+          <span class="mock-bar" />
+          <span class="mock-bar short" />
+        </div>
+      </div>
+      <ul class="legend">
+        <li><b>Home</b> was opened in {s.name}.</li>
+        <li>
+          <b>Docs</b> was opened from a link on it, so it {inheritOpener ? `stays in ${s.name}` : 'lands in the default session'}.
+        </li>
+        <li><b>Mail</b> is an ordinary tab.</li>
+      </ul>
+    </aside>
+  );
+}
+
 function Prefs({ state }: { state: AppState }) {
   const set = (prefs: Partial<AppState['prefs']>) => void call('setPrefs', { prefs });
   return (
     <>
-      <ViewHead title="Preferences">How session tabs behave and how they're marked in the tab strip.</ViewHead>
+      <ViewHead title="Preferences">How session tabs behave and how they're marked in the tab strip. Changes apply right away.</ViewHead>
       <div class="prefs">
-        <section class="plate">
-          <h3>Behaviour</h3>
-          <Toggle title="Inherit session" checked={state.prefs.inheritOpener} onChange={(v) => set({ inheritOpener: v })}>
-            Links and pop-ups opened from a session tab stay in that session.
-          </Toggle>
-        </section>
-        <section class="plate">
-          <h3>Tab marking</h3>
-          <Toggle title="Group tabs by session" checked={state.prefs.tabGroups} onChange={(v) => set({ tabGroups: v })}>
-            Keep each session's tabs in a tab group showing the session's full name and colour. Dragging a tab into a group moves it into that session.
-          </Toggle>
-          <Toggle title="Badge tab icons" checked={state.prefs.faviconBadge} onChange={(v) => set({ faviconBadge: v })}>
-            Put the session's lamp on each tab's site icon.
-          </Toggle>
-          <Toggle title="Tag tab titles" checked={state.prefs.titlePrefix} onChange={(v) => set({ titlePrefix: v })}>
-            Prefix tab titles with the session tag, e.g. <code>[DEV] Dashboard</code>.
-          </Toggle>
-        </section>
+        <div class="prefs-main">
+          <section class="plate">
+            <header>
+              <h3>Behaviour</h3>
+              <p class="muted">Where new tabs end up.</p>
+            </header>
+            <Toggle title="Inherit session" checked={state.prefs.inheritOpener} onChange={(v) => set({ inheritOpener: v })}>
+              Links and pop-ups opened from a session tab stay in that session.
+            </Toggle>
+          </section>
+          <section class="plate">
+            <header>
+              <h3>Tab marking</h3>
+              <p class="muted">How you tell sessions apart at a glance.</p>
+            </header>
+            <Toggle title="Group tabs by session" checked={state.prefs.tabGroups} onChange={(v) => set({ tabGroups: v })}>
+              Keep each session's tabs in a tab group showing the session's full name and colour. Dragging a tab into a group moves it into that session.
+            </Toggle>
+            <Toggle title="Badge tab icons" checked={state.prefs.faviconBadge} onChange={(v) => set({ faviconBadge: v })}>
+              Put the session's lamp on each tab's site icon.
+            </Toggle>
+            <Toggle title="Tag tab titles" checked={state.prefs.titlePrefix} onChange={(v) => set({ titlePrefix: v })}>
+              Prefix tab titles with the session tag, e.g. <code>[DEV] Dashboard</code>.
+            </Toggle>
+          </section>
+        </div>
+        <TabPreview state={state} />
       </div>
     </>
   );
@@ -412,13 +474,18 @@ function Import() {
         <span>Passphrase</span>
         <input type="password" autocomplete="off" value={passphrase} onInput={(e) => setPassphrase(e.currentTarget.value)} />
       </label>
-      <label class="field">
+      <div class="field">
         <span>Mode</span>
-        <select value={mode} onChange={(e) => setMode(e.currentTarget.value as 'merge' | 'replace')}>
-          <option value="merge">Merge with current sessions</option>
-          <option value="replace">Replace everything</option>
-        </select>
-      </label>
+        <Select
+          label="Mode"
+          value={mode}
+          options={[
+            { value: 'merge', label: 'Merge with current sessions' },
+            { value: 'replace', label: 'Replace everything' },
+          ]}
+          onChange={setMode}
+        />
+      </div>
       <button disabled={busy || !file || !passphrase} onClick={doImport}>Import</button>
       <StatusText status={status} />
     </section>

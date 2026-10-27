@@ -176,13 +176,24 @@ button.icon { width: 30px; height: 28px; padding: 0; font-size: 18px; line-heigh
   .rule .pattern { grid-column: 1 / -1; }
 }
 
-/* Preferences. */
-.prefs { display: grid; gap: 18px; max-width: 760px; }
-.prefs section { padding: 16px 20px 6px; }
-.prefs h3 { margin-bottom: 4px; }
-.toggle { display: flex; gap: 16px; align-items: center; padding: 12px 0; cursor: pointer; }
+/* Preferences: settings on the left, a live tab-strip preview beside them; stacked when narrow. */
+.prefs { display: grid; grid-template-columns: minmax(0, 1fr) minmax(320px, 430px); gap: 22px; align-items: start; }
+.prefs-main { display: grid; gap: 22px; }
+.prefs section { padding: 0 20px 6px; }
+.prefs section > header {
+  margin: 0 -20px 4px;
+  padding: 14px 20px 12px;
+  border-bottom: 1.5px dashed var(--line);
+  background: var(--card-2);
+  border-radius: var(--radius) var(--radius) 0 0;
+}
+.prefs section > header p { margin: 2px 0 0; font-size: 13px; }
+@media (max-width: 900px) { .prefs { grid-template-columns: minmax(0, 1fr); } }
+.toggle { display: flex; gap: 16px; align-items: center; padding: 14px 0; cursor: pointer; }
 .toggle + .toggle { border-top: 1.5px dashed var(--line); }
-.toggle strong { display: block; }
+.toggle strong { display: block; margin-bottom: 1px; }
+.toggle .muted { display: block; font-size: 13px; line-height: 1.45; max-width: 60ch; }
+.toggle:hover strong { color: color-mix(in srgb, var(--text) 75%, var(--grass-side)); }
 .toggle input { position: absolute; opacity: 0; pointer-events: none; }
 .lever {
   position: relative;
@@ -235,3 +246,96 @@ ul.limits li::before {
   background: var(--grass);
   border: 1.5px solid var(--ink);
 }
+
+.preview { position: sticky; top: 96px; padding: 16px 18px 18px; display: grid; gap: 12px; }
+.preview p { margin: -6px 0 0; font-size: 13px; }
+.preview .stamp { font-size: 8px; }
+.mock-window {
+  border: 1.5px solid var(--ink);
+  border-radius: var(--radius);
+  overflow: hidden;
+  background: var(--well);
+  box-shadow: inset 0 2px 0 rgba(255, 255, 255, 0.05);
+}
+.mock-strip {
+  display: flex;
+  align-items: flex-end;
+  gap: 3px;
+  padding: 8px 8px 0;
+  background: var(--night);
+  min-height: 42px;
+}
+.mock-group {
+  align-self: center;
+  margin: 0 2px 6px 0;
+  padding: 0 7px;
+  max-width: 76px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 18px;
+  color: #15101c;
+  border-radius: 3px;
+  box-shadow: inset 0 -2px 0 rgba(0, 0, 0, 0.2);
+}
+.mock-tab {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: 1 1 0;
+  min-width: 0;
+  padding: 7px 8px 9px;
+  font-size: 11.5px;
+  color: rgba(246, 241, 255, 0.72);
+  border-radius: 5px 5px 0 0;
+  transition: background 0.2s;
+}
+.mock-tab.current { background: var(--well); color: var(--text); }
+.mock-tab[style]::after {
+  /* The group's colour runs under its tabs, as in Chrome. */
+  content: '';
+  position: absolute;
+  left: 2px;
+  right: 2px;
+  bottom: 0;
+  height: 3px;
+  border-radius: 2px 2px 0 0;
+  background: var(--group);
+}
+.mock-tab b { font-weight: 700; color: var(--water); }
+.mock-fav {
+  position: relative;
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 15px;
+  height: 15px;
+  font: 700 8px/1 var(--body);
+  color: #fff;
+  border-radius: 2px;
+  background: #6b7c93;
+  box-shadow: inset 0 -2px 0 rgba(0, 0, 0, 0.25);
+}
+.mock-fav[data-site='H'] { background: #2f8fd8; }
+.mock-fav[data-site='D'] { background: #d26a3b; }
+.mock-fav[data-site='M'] { background: #8a62c9; }
+.mock-lamp {
+  position: absolute;
+  right: -3px;
+  bottom: -3px;
+  width: 8px;
+  height: 8px;
+  border-radius: 2px;
+  border: 1.5px solid var(--night);
+  animation: pop 0.2s ease-out;
+}
+@keyframes pop { from { transform: scale(0); } }
+.mock-page { display: grid; gap: 7px; padding: 14px 12px 16px; }
+.mock-bar { height: 8px; border-radius: 2px; background: var(--line); }
+.mock-bar.short { width: 60%; }
+ul.legend { margin: 0; padding: 0; list-style: none; display: grid; gap: 5px; font-size: 12.5px; color: var(--muted); }
+ul.legend b { color: var(--text); font-weight: 600; }
+@media (prefers-reduced-motion: reduce) { .mock-lamp { animation: none; } }
