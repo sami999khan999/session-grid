@@ -1,7 +1,7 @@
 {
   "name": "sessionstack",
-  "description": "Multiple isolated sessions per site, one tab at a time.",
-  "version": "0.1.0",
+  "description": "Several isolated logins to the same site, side by side in one window. Each tab belongs to a session with its own cookies and storage.",
+  "version": "0.2.0",
   "private": true,
   "type": "module",
   "scripts": {

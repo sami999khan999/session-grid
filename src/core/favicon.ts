@@ -5,7 +5,7 @@ const cache = new Map<string, Promise<string>>();
 
 /**
  * The site's favicon with a session lamp in the corner, as a PNG data URL. Without a usable
- * favicon (missing, SVG, failed fetch) the result is a plain tile with the session's initial.
+ * favicon (missing, SVG, failed fetch) the result is a plain tile with the tag's first two characters.
  * Runs in the background service worker (OffscreenCanvas).
  */
 export function badgedFavicon(iconUrl: string | undefined, color: string, tag: string): Promise<string> {
@@ -46,10 +46,12 @@ async function draw(iconUrl: string | undefined, color: string, tag: string): Pr
     ctx.strokeStyle = INK;
     ctx.stroke();
     ctx.fillStyle = INK;
-    ctx.font = 'bold 20px system-ui, sans-serif';
+    // Two characters of the tag: as much as stays legible at 16px.
+    const text = tag.replace(/\s/g, '').slice(0, 2).toUpperCase() || '•';
+    ctx.font = `900 ${text.length > 1 ? 17 : 21}px system-ui, sans-serif`;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.fillText((tag.trim()[0] ?? '•').toUpperCase(), SIZE / 2, SIZE / 2 + 1);
+    ctx.fillText(text, SIZE / 2, SIZE / 2 + 1, SIZE - 6);
   }
   const blob = await canvas.convertToBlob({ type: 'image/png' });
   const bytes = new Uint8Array(await blob.arrayBuffer());
@@ -80,3 +82,4 @@ export function inkFor(hex: string): string {
   const lum = 0.2126 * r! + 0.7152 * g! + 0.0722 * b!;
   return lum > 0.22 ? INK : '#ffffff';
 }
+

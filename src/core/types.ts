@@ -36,6 +36,8 @@ export interface Prefs {
   inheritOpener: boolean;
   /** Mark the favicon of partitioned tabs with the session's colour (Chrome only). */
   faviconBadge: boolean;
+  /** Keep each session's tabs in a tab group named after it (Chrome only). */
+  tabGroups: boolean;
 }
 
 export interface AppState {
@@ -58,7 +60,7 @@ export interface PortableCookie {
   expires?: number;
 }
 
-export const DEFAULT_PREFS: Prefs = { titlePrefix: false, inheritOpener: true, faviconBadge: true };
+export const DEFAULT_PREFS: Prefs = { titlePrefix: true, inheritOpener: true, faviconBadge: true, tabGroups: true };
 
 export function newId(): string {
   return crypto.randomUUID().replace(/-/g, '').slice(0, 12);

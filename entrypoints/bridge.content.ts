@@ -10,8 +10,11 @@ function prefixTitle(tag: string) {
   new MutationObserver(apply).observe(document, { subtree: true, childList: true, characterData: true });
 }
 
-/** Show the session-badged favicon: the page's own icon links are parked, ours goes last. */
-function setFavicon(href: string) {
+/**
+ * Show the session-badged favicon: the page's own icon links are parked, ours goes last. If the
+ * page's CSP refuses the data: icon, switch to `fallback`, an extension file CSP doesn't cover.
+ */
+function setFavicon(href: string, fallback: string) {
   const head = document.head ?? document.documentElement;
   for (const link of head.querySelectorAll<HTMLLinkElement>('link[rel~="icon"]:not([data-sessionstack])')) {
     link.dataset.sessionstackRel = link.rel;
@@ -22,8 +25,14 @@ function setFavicon(href: string) {
     ours = Object.assign(document.createElement('link'), { rel: 'icon', type: 'image/png' });
     ours.dataset.sessionstack = '';
   }
-  ours.href = href;
-  head.append(ours);
+  const link = ours;
+  const onBlocked = (e: SecurityPolicyViolationEvent) => {
+    if (e.blockedURI === 'data' || e.blockedURI.startsWith('data:')) link.href = fallback;
+  };
+  document.addEventListener('securitypolicyviolation', onBlocked);
+  setTimeout(() => document.removeEventListener('securitypolicyviolation', onBlocked), 3000);
+  link.href = href;
+  head.append(link);
 }
 
 /**
@@ -51,9 +60,9 @@ export default defineContentScript({
       return sessionId ?? '';
     };
 
-    browser.runtime.onMessage.addListener((msg: { type?: string; href?: string }) => {
+    browser.runtime.onMessage.addListener((msg: { type?: string; href?: string; fallback?: string }) => {
       if (msg?.type === 'cookiesChanged' && shimKey()) void push();
-      if (msg?.type === 'favicon' && msg.href && window === window.top) setFavicon(msg.href);
+      if (msg?.type === 'favicon' && msg.href && msg.fallback && window === window.top) setFavicon(msg.href, msg.fallback);
     });
 
     if (location.protocol !== 'http:' && location.protocol !== 'https:') return;

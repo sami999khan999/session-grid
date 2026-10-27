@@ -5,8 +5,8 @@ export default defineConfig({
   srcDir: '.',
   manifestVersion: 3,
   vite: () => ({ plugins: [preact()] }),
-  // Keep previous release artifacts out of the Firefox sources zip.
-  zip: { excludeSources: ['release/**'] },
+  // Keep release artifacts and README screenshots out of the Firefox sources zip.
+  zip: { excludeSources: ['release/**', 'docs/**'] },
   manifest: ({ browser }) => ({
     name: 'SessionStack',
     description: 'Run several isolated logins for the same site side by side, one session per tab.',
@@ -17,7 +17,7 @@ export default defineConfig({
       'webNavigation',
       ...(browser === 'firefox'
         ? ['cookies', 'contextualIdentities', 'webRequestBlocking', 'browsingData']
-        : ['declarativeNetRequestWithHostAccess']),
+        : ['declarativeNetRequestWithHostAccess', 'tabGroups']),
     ],
     host_permissions: ['<all_urls>'],
     commands: Object.fromEntries(
@@ -29,8 +29,9 @@ export default defineConfig({
         },
       ]),
     ),
-    // Auto-mapping redirects land on this page (Chrome); DNR can only redirect to accessible resources.
-    ...(browser === 'firefox' ? {} : { web_accessible_resources: [{ resources: ['switch.html'], matches: ['<all_urls>'] }] }),
+    // Auto-mapping redirects land on switch.html (Chrome); DNR can only redirect to accessible resources.
+    // favicon/* are the badged tab icons, served by the background worker.
+    ...(browser === 'firefox' ? {} : { web_accessible_resources: [{ resources: ['switch.html', 'favicon/*'], matches: ['<all_urls>'] }] }),
     ...(browser === 'firefox'
       ? { browser_specific_settings: { gecko: { id: 'sessionstack@session-grid', strict_min_version: '140.0', data_collection_permissions: { required: ['none'] } } } }
       : {}),

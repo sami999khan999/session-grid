@@ -4,6 +4,7 @@ import { serve } from '../src/core/messages';
 import { loadState, onStateChanged, saveState } from '../src/core/store';
 import { SESSION_COLORS, type AppState, type PortableCookie, type Rule, type Session } from '../src/core/types';
 import { ChromeEngine } from '../src/engines/chromium';
+import { TabGrouper } from '../src/engines/chromium/groups';
 import type { IsolationEngine } from '../src/engines/engine';
 import { FirefoxEngine } from '../src/engines/firefox';
 
@@ -22,6 +23,7 @@ export default defineBackground(() => {
 
   const chrome = import.meta.env.FIREFOX ? null : new ChromeEngine(state);
   const engine: IsolationEngine = chrome ?? new FirefoxEngine(state);
+  const grouper = chrome ? new TabGrouper() : null;
   engine.attach();
 
   async function update(mutate: (s: AppState) => void): Promise<AppState> {
@@ -43,6 +45,7 @@ export default defineBackground(() => {
 
   async function refreshBadge(tabId: number) {
     const session = await tabSession(tabId);
+    await grouper?.sync(tabId, session, (await state.get()).prefs.tabGroups);
     // Three characters is what the toolbar badge fits without clipping.
     await browser.action.setBadgeText({ tabId, text: session ? session.tag.slice(0, 3) : '' }).catch(() => {});
     if (!session) return;
@@ -53,19 +56,24 @@ export default defineBackground(() => {
 
   async function refreshAllBadges() {
     for (const tab of await browser.tabs.query({})) if (tab.id !== undefined) await refreshBadge(tab.id);
+    await grouper?.prune((await state.get()).sessions);
   }
 
   // Favicon badge (Chrome; Firefox marks container tabs itself). The page's own favicon, as the
   // browser resolved it, gets the session lamp and is handed to the tab's bridge to display.
-  // `applied` remembers what we set, so the resulting favIconUrl change doesn't loop.
+  // `applied` and `lampBase` recognise icons we set, so the resulting favIconUrl change doesn't loop.
   const applied = new Map<number, string>();
+  const lampBase = browser.runtime.getURL('/favicon/' as '/');
   async function refreshFavicon(tabId: number, favIconUrl: string | undefined) {
-    if (!chrome || (favIconUrl && applied.get(tabId) === favIconUrl)) return;
+    if (!chrome || (favIconUrl && (applied.get(tabId) === favIconUrl || favIconUrl.startsWith(lampBase)))) return;
     const session = await tabSession(tabId);
     if (!session || !(await state.get()).prefs.faviconBadge) return;
     const href = await badgedFavicon(favIconUrl, SESSION_COLORS[session.color], session.tag);
     applied.set(tabId, href);
-    await browser.tabs.sendMessage(tabId, { type: 'favicon', href }, { frameId: 0 }).catch(() => {});
+    // A strict img-src CSP blocks the data: icon. Extension files are exempt, so the bridge then
+    // falls back to the plain lamp for the session's colour.
+    const fallback = `${lampBase}${session.color}.png`;
+    await browser.tabs.sendMessage(tabId, { type: 'favicon', href, fallback }, { frameId: 0 }).catch(() => {});
   }
 
   // Chrome often learns the favicon after `complete`. Give it a moment, then fall back to the
@@ -79,12 +87,46 @@ export default defineBackground(() => {
   }
 
   browser.tabs.onUpdated.addListener((tabId, info, tab) => {
-    if (info.status === 'loading' || info.url) void refreshBadge(tabId);
+    if (info.groupId !== undefined) void groupChanged(tabId, info.groupId);
+    if (info.status || info.url || info.pinned === false) void refreshBadge(tabId);
     if (info.favIconUrl !== undefined) void refreshFavicon(tabId, info.favIconUrl);
     else if (info.status === 'complete' && !tab.favIconUrl) void faviconAfterLoad(tabId);
   });
   browser.tabs.onActivated.addListener(({ tabId }) => void refreshBadge(tabId));
-  browser.tabs.onRemoved.addListener((tabId) => applied.delete(tabId));
+  // A tab dragged to another window joins its session's group there.
+  const attachedAt = new Map<number, number>();
+  browser.tabs.onAttached.addListener((tabId) => {
+    attachedAt.set(tabId, Date.now());
+    void refreshBadge(tabId);
+  });
+
+  // Group membership follows the user's drags: into a session's group moves the tab into that
+  // session; out of it returns the tab to the default session. Our own grouping always matches
+  // the tab's session, so it never triggers a move.
+  async function groupChanged(tabId: number, groupId: number) {
+    if (!grouper || !(await state.get()).prefs.tabGroups) return;
+    const current = await engine.getTabSession(tabId).catch(() => null);
+    if (groupId !== -1) {
+      const target = await grouper.sessionOf(groupId);
+      if (target && target !== current) await moveTab(tabId, target);
+      return;
+    }
+    if (!current) return;
+    // Leaving a group is also what pinning a tab or dragging it to another window looks like.
+    await new Promise((r) => setTimeout(r, 500));
+    const tab = await browser.tabs.get(tabId).catch(() => null);
+    if (!tab || tab.pinned || tab.groupId !== -1 || Date.now() - (attachedAt.get(tabId) ?? 0) < 2000) return;
+    if ((await engine.getTabSession(tabId).catch(() => null)) === current) await moveTab(tabId, null);
+  }
+
+  async function moveTab(tabId: number, sessionId: string | null) {
+    await engine.assignTab(tabId, sessionId).catch(() => {});
+    await refreshBadge(tabId);
+  }
+  browser.tabs.onRemoved.addListener((tabId) => {
+    applied.delete(tabId);
+    attachedAt.delete(tabId);
+  });
 
   // ------------------------------------------------------------------ hotkeys
 

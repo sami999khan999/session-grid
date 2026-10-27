@@ -274,6 +274,9 @@ function Options() {
               <Toggle title="Inherit session" checked={state.prefs.inheritOpener} onChange={(v) => void call('setPrefs', { prefs: { inheritOpener: v } })}>
                 Links and pop-ups opened from a session tab stay in that session.
               </Toggle>
+              <Toggle title="Group tabs by session" checked={state.prefs.tabGroups} onChange={(v) => void call('setPrefs', { prefs: { tabGroups: v } })}>
+                Keep each session's tabs in a Chrome tab group showing the session's full name and colour.
+              </Toggle>
               <Toggle title="Badge tab icons" checked={state.prefs.faviconBadge} onChange={(v) => void call('setPrefs', { prefs: { faviconBadge: v } })}>
                 Put the session's lamp on each tab's site icon, so sessions are easy to tell apart in the tab strip.
               </Toggle>

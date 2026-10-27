@@ -1,18 +1,78 @@
+<div align="center">
+
+<img src="assets/icon.svg" width="112" alt="SessionStack icon" />
+
 # SessionStack
 
-A browser extension for several logins to the same site side by side in one window. Each tab belongs to a **session** with its own cookies and site storage. Examples: production admin in one tab, a staging developer in the next, a client QA account in a third.
+**Several logins to the same site, side by side in one window.**
 
-Works in Chrome/Chromium (Manifest V3) and Firefox (Manifest V3, 140+).
+Every tab belongs to a *session* with its own cookies and site storage. Keep the production admin in one tab, a staging developer in the next and a client QA account in a third, with no private windows and no extra browser profiles.
+
+![Chrome MV3](https://img.shields.io/badge/Chrome-MV3-1f2a33?style=for-the-badge&logo=googlechrome&logoColor=e0a93f)
+![Firefox 140+](https://img.shields.io/badge/Firefox-140%2B-1f2a33?style=for-the-badge&logo=firefoxbrowser&logoColor=e4612a)
+![Version 0.2.0](https://img.shields.io/badge/version-0.2.0-e4612a?style=for-the-badge)
+![TypeScript](https://img.shields.io/badge/TypeScript-Preact-e0a93f?style=for-the-badge&logo=typescript&logoColor=1f2a33)
+
+<img src="docs/screenshots/popup-light.png" width="300" alt="Toolbar popup, light theme" />
+&nbsp;&nbsp;
+<img src="docs/screenshots/popup-dark.png" width="300" alt="Toolbar popup, dark theme" />
+
+</div>
+
+---
 
 ## Features
 
-- **Per-tab sessions.** Open a new tab in a session, or move the current tab into one, from the toolbar popup. The toolbar badge shows the tab's session tag.
-- **Isolation.** Cookies, `document.cookie`, `cookieStore`, `localStorage` and `sessionStorage`.
-- **Auto-session rules.** URL globs such as `*.staging.example.com` or `https://example.com/admin/*` route navigations into a session.
-- **Encrypted export/import.** Sessions, rules and cookies go into a passphrase-protected file (PBKDF2-SHA-256 with 600k iterations, then AES-GCM-256). Merge into or replace the current setup.
-- **Hotkeys.** `Alt+Shift+1…4` open a new tab in the first four sessions.
+| | |
+|---|---|
+| 🗂️ **Sessions per tab** | Open a new tab in a session, or move the current tab into one, from the toolbar popup. A session can have as many tabs as you like, and they share one login. |
+| 🔒 **Real isolation** | Each session gets its own cookies, `document.cookie`, `cookieStore`, `localStorage` and `sessionStorage`. |
+| 🏷️ **Tab groups** | In Chrome, each session's tabs sit in a tab group labelled with the session's full name and colour. Drag a tab into a group to move it into that session; drag it out to return it to the default session. |
+| 💡 **Marked tabs** | The site's tab icon gets the session's coloured lamp, and the title gets the session tag, e.g. `[ADM] Dashboard`. The toolbar badge shows the tag too. |
+| 🧭 **Auto-session rules** | URL globs such as `*.staging.example.com` or `https://example.com/admin/*` send navigations into a session automatically. |
+| 🔗 **Inherited pop-ups** | Links and pop-ups opened from a session tab stay in that session. |
+| 🔐 **Encrypted backup** | Sessions, rules and cookies are exported to a passphrase-protected file (PBKDF2-SHA-256 with 600k iterations, then AES-GCM-256). On import you can merge or replace. |
+| ⌨️ **Hotkeys** | `Alt+Shift+1…4` open a new tab in the first four sessions. |
+| 🌗 **Light and dark** | A steampunk retro theme: parchment and ink by day, deep voyage blue by night. |
+
+<div align="center">
+<img src="docs/screenshots/options-light.png" width="820" alt="Settings page, light theme" />
+<br /><br />
+<img src="docs/screenshots/options-dark.png" width="820" alt="Settings page, dark theme" />
+</div>
+
+## Install
+
+Ready-made builds are in [`release/`](release/).
+
+**Chrome, Edge, Brave and other Chromium browsers**
+1. Open `chrome://extensions` and turn on **Developer mode**.
+2. Click **Load unpacked** and pick `release/chrome-mv3`.
+   (Or install `release/sessionstack-0.2.0-chrome.zip` through a store or your browser's policy tools.)
+
+**Firefox 140+**
+1. Open `about:debugging#/runtime/this-firefox`.
+2. Click **Load Temporary Add-on…** and pick `release/firefox-mv3/manifest.json`.
+   (`release/sessionstack-0.2.0-firefox.zip` is the package for addons.mozilla.org, with `sessionstack-0.2.0-sources.zip` as its source upload.)
+
+## Using it
+
+1. Click the toolbar icon and add a session, e.g. *Attorney*.
+2. Click **New tab** next to it and sign in. That login now belongs to the session.
+3. Add another session and sign in as someone else. Both stay signed in, side by side.
+4. Open **Settings** to rename sessions, change their badge and colour, set up auto-session rules, adjust preferences or back up everything.
 
 ## How it works
+
+Think of each session as **its own cookie jar**, and each tab as wearing a **name tag** that says which jar it uses.
+
+```mermaid
+flowchart LR
+  T1["Tab · Admin"] --> J1[("Admin jar")]
+  T2["Tab · Admin"] --> J1
+  T3["Tab · Attorney"] --> J2[("Attorney jar")]
+  T4["Normal tab"] --> J0[("Browser's own cookies")]
+```
 
 Both engines sit behind one interface in `src/engines/engine.ts`.
 
@@ -30,6 +90,10 @@ Both engines sit behind one interface in `src/engines/engine.ts`.
 - Auto-session rules compile to DNR redirects through `switch.html`. The tab joins the session *before* the first request is sent.
 - Login flows where a redirect races the rule update are detected. The extension compares the `Cookie` header that was actually sent with the jar, and reloads the page when they differ.
 
+**Tab marking (Chrome).**
+- **Tab groups:** groups are created and labelled by `src/engines/chromium/groups.ts`. Only groups the extension created are ever changed.
+- **Favicon:** the badged icon is drawn in the service worker with `OffscreenCanvas`. If a site's `img-src` CSP refuses the generated icon, the bridge switches to a plain lamp icon shipped in `public/favicon/`, because extension files aren't covered by the page's CSP.
+
 ## Known limitations (Chrome)
 
 - **Not isolated:** IndexedDB, Cache Storage and site service workers (requests from a service worker have no tab). On these, partitioned tabs share data with the default session.
@@ -37,6 +101,8 @@ Both engines sit behind one interface in `src/engines/engine.ts`.
 - **Restarts:** after a browser restart, session tabs are matched back by URL and position. Unmatched tabs fall back to the default session. This is safe: no cookies cross between sessions.
 - **Rule budget:** Chrome caps regex rules at 1000. Sessions with cookies for very many hosts stop sending cookies to their oldest hosts first (fail-closed), and a warning is logged.
 - **Storage on disk:** session jars are kept unencrypted in the extension's local storage, like the browser's own cookie store. Export files are encrypted.
+- **Saved tab groups:** Chrome saves every tab group to the bookmarks bar. To hide them, right-click the bookmarks bar and untick **Show tab groups**, or turn off *Group tabs by session* in Preferences.
+- **Tab icons:** on sites with a strict `img-src` CSP, the tab shows the plain session lamp instead of the site's own icon with the lamp.
 
 ## Development
 
@@ -74,13 +140,18 @@ There is no automated Firefox run yet. Use `pnpm dev:firefox` and check the same
 
 ```
 entrypoints/
-  background.ts          service worker: state, API, badges, hotkeys
+  background.ts          service worker: state, API, badges, favicons, tab groups, hotkeys
   popup/  options/       Preact UI
   switch/                auto-mapping redirect target (Chrome)
   shim.content.ts        MAIN-world cookie/storage shim (Chrome)
   bridge.content.ts      isolated-world bridge between shim and background (Chrome)
-src/core/                types, storage, messaging, URL rules, crypto
-src/engines/chromium/    cookie jar, DNR rule compiler, engine
+src/core/                types, storage, messaging, URL rules, crypto, favicon drawing
+src/engines/chromium/    cookie jar, DNR rule compiler, tab groups, engine
 src/engines/firefox/     container engine
 src/page/                storage proxy and cookie view used by the shim
+src/ui/                  theme, fonts, glass-scroll scrollbars, shared UI helpers
+public/favicon/          per-colour lamp icons (CSP fallback)
+release/                 built Chrome and Firefox packages
 ```
+
+The scrollbars use [glass-scroll](https://github.com/sami999khan999/glass_scroll).
