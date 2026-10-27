@@ -10,7 +10,7 @@ Every tab belongs to a *session* with its own cookies and site storage. Keep the
 
 ![Chrome MV3](https://img.shields.io/badge/Chrome-MV3-1f2a33?style=for-the-badge&logo=googlechrome&logoColor=e0a93f)
 ![Firefox 140+](https://img.shields.io/badge/Firefox-140%2B-1f2a33?style=for-the-badge&logo=firefoxbrowser&logoColor=e4612a)
-![Version 0.2.0](https://img.shields.io/badge/version-0.2.0-e4612a?style=for-the-badge)
+![Version 0.3.0](https://img.shields.io/badge/version-0.3.0-8fd14f?style=for-the-badge)
 ![TypeScript](https://img.shields.io/badge/TypeScript-Preact-e0a93f?style=for-the-badge&logo=typescript&logoColor=1f2a33)
 
 <img src="docs/screenshots/popup-light.png" width="300" alt="Toolbar popup, light theme" />
@@ -33,7 +33,7 @@ Every tab belongs to a *session* with its own cookies and site storage. Keep the
 | 🔗 **Inherited pop-ups** | Links and pop-ups opened from a session tab stay in that session. |
 | 🔐 **Encrypted backup** | Sessions, rules and cookies are exported to a passphrase-protected file (PBKDF2-SHA-256 with 600k iterations, then AES-GCM-256). On import you can merge or replace. |
 | ⌨️ **Hotkeys** | `Alt+Shift+1…4` open a new tab in the first four sessions. |
-| 🌗 **Light and dark** | A steampunk retro theme: parchment and ink by day, deep voyage blue by night. |
+| 🌗 **Light and dark** | A voxel diorama theme: block-built buttons and cards on a pale studio floor by day, a dusk-purple sky by night. |
 
 <div align="center">
 <img src="docs/screenshots/options-light.png" width="820" alt="Settings page, light theme" />
@@ -48,12 +48,12 @@ Ready-made builds are in [`release/`](release/).
 **Chrome, Edge, Brave and other Chromium browsers**
 1. Open `chrome://extensions` and turn on **Developer mode**.
 2. Click **Load unpacked** and pick `release/chrome-mv3`.
-   (Or install `release/sessionstack-0.2.0-chrome.zip` through a store or your browser's policy tools.)
+   (Or install `release/sessionstack-0.3.0-chrome.zip` through a store or your browser's policy tools.)
 
 **Firefox 140+**
 1. Open `about:debugging#/runtime/this-firefox`.
 2. Click **Load Temporary Add-on…** and pick `release/firefox-mv3/manifest.json`.
-   (`release/sessionstack-0.2.0-firefox.zip` is the package for addons.mozilla.org, with `sessionstack-0.2.0-sources.zip` as its source upload.)
+   (`release/sessionstack-0.3.0-firefox.zip` is the package for addons.mozilla.org, with `sessionstack-0.3.0-sources.zip` as its source upload.)
 
 ## Using it
 

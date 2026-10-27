@@ -8,10 +8,10 @@ importers:
 
   .:
     dependencies:
-      '@fontsource-variable/bitter':
+      '@fontsource-variable/rubik':
         specifier: ^5.3.0
         version: 5.3.0
-      '@fontsource/alfa-slab-one':
+      '@fontsource/silkscreen':
         specifier: ^5.3.0
         version: 5.3.0
       glass-scroll:
@@ -221,11 +221,11 @@ packages:
     resolution: {integrity: sha512-5D2qVpZrgpjtqU4eNOcWGp1gnUCgjfM+vKGE2y03kKN6z5EBhtx0qdRFbg8QuNNj8wXNoX93KJoYb+NqoxswmQ==}
     engines: {node: '>=14.0.0', npm: '>=7.0.0'}
 
-  '@fontsource-variable/bitter@5.3.0':
-    resolution: {integrity: sha512-TNGusdX+fjWE2b8pTG7kH1A615DbjjSj8/PwVm+iyiFiLFtioHXt6eH5jIFE2kmiA3Ogp03jEyZDsukotzC+4Q==}
+  '@fontsource-variable/rubik@5.3.0':
+    resolution: {integrity: sha512-yQUf8qle24MJYA+EuauyF+cqjjN6I715nGjitt3sGmwZA0XfA4fWJcLq1C/diREZl4Qzn1E80nLMc0ipC/a4Lg==}
 
-  '@fontsource/alfa-slab-one@5.3.0':
-    resolution: {integrity: sha512-J/ANFZ7S9CbZClr/QhMjmBtpFmmKipVkEXHj20aurR5uqJPCBChVPJn1/kx6vtrwnfnDY0kQaYSTYasSt4GruA==}
+  '@fontsource/silkscreen@5.3.0':
+    resolution: {integrity: sha512-M1NQ3LQH0LFNvyFPd/piHEGMImPPtpLglNnLC6Vdcq9kL0jNIOtTQmksAWCc4enbDnw1OnIpZtjNEfRqYm/QmA==}
 
   '@fregante/relaxed-json@2.0.0':
     resolution: {integrity: sha512-PyUXQWB42s4jBli435TDiYuVsadwRHnMc27YaLouINktvTWsL3FcKrRMGawTayFk46X+n5bE23RjUTWQwrukWw==}
@@ -2576,9 +2576,9 @@ snapshots:
 
   '@fluent/syntax@0.19.0': {}
 
-  '@fontsource-variable/bitter@5.3.0': {}
+  '@fontsource-variable/rubik@5.3.0': {}
 
-  '@fontsource/alfa-slab-one@5.3.0': {}
+  '@fontsource/silkscreen@5.3.0': {}
 
   '@fregante/relaxed-json@2.0.0': {}
 

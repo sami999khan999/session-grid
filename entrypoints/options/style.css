@@ -5,12 +5,6 @@
   position: sticky;
   top: 0;
   z-index: 10;
-  border-bottom-width: 5px;
-  /* Sparser stars than the popup's band, so they don't sit behind the tab labels. */
-  background:
-    radial-gradient(circle, rgba(244, 236, 219, 0.75) 0 1px, transparent 1.5px) 13px 7px / 97px 61px,
-    radial-gradient(circle at 92% -40%, transparent 0 118px, rgba(244, 236, 219, 0.12) 119px 120px, transparent 121px),
-    linear-gradient(160deg, var(--night-2), var(--night));
 }
 .topbar .bar {
   max-width: var(--max);
@@ -22,8 +16,8 @@
   flex-wrap: wrap;
 }
 .brand { gap: 10px; padding-bottom: 12px; text-decoration: none; }
-.brand .title { font-size: 22px; line-height: 1; }
-.brand .cog { font-size: 26px; }
+.brand .title { font-size: 19px; line-height: 1; }
+.brand .cube { font-size: 28px; }
 
 .tabs { display: flex; gap: 4px; margin-left: auto; overflow-x: auto; scrollbar-width: none; }
 .tabs::-webkit-scrollbar { display: none; }
@@ -33,18 +27,19 @@
   gap: 7px;
   flex: none;
   padding: 8px 14px 9px;
-  border-radius: 9px 9px 0 0;
-  color: rgba(244, 236, 219, 0.75);
+  border-radius: var(--radius) var(--radius) 0 0;
+  color: rgba(246, 241, 255, 0.75);
   text-decoration: none;
   font-weight: 650;
   border: 1.5px solid transparent;
   border-bottom: none;
 }
-.tabs a:hover { color: var(--cream); background: rgba(244, 236, 219, 0.08); }
+.tabs a:hover { color: var(--cream); background: rgba(246, 241, 255, 0.08); }
 .tabs a[aria-current='page'] {
-  color: var(--ink);
-  background: var(--brass);
+  color: var(--grass-text);
+  background: var(--grass);
   border-color: var(--ink);
+  box-shadow: inset 0 2px 0 rgba(255, 255, 255, 0.4);
 }
 .tabs a:focus-visible { outline-offset: -3px; }
 .count {
@@ -54,9 +49,10 @@
   font-size: 11px;
   font-weight: 750;
   line-height: 18px;
-  border-radius: 9px;
-  color: var(--copper-text);
-  background: var(--copper);
+  border-radius: 2px;
+  color: var(--ember-text);
+  background: var(--ember);
+  border: 1.5px solid var(--ink);
 }
 
 @media (max-width: 760px) {
@@ -73,8 +69,8 @@
 .view-head .grow { flex: 1 1 360px; }
 .view-head p { margin: 4px 0 0; max-width: 68ch; }
 .view-head .actions { flex-wrap: wrap; }
-h2 { font: 400 clamp(22px, 3vw, 28px)/1.15 var(--display); letter-spacing: 0.01em; margin: 0; }
-h3 { font: 400 15px/1.25 var(--display); letter-spacing: 0.02em; margin: 0; }
+h2 { font: 700 clamp(19px, 2.6vw, 24px)/1.2 var(--display); letter-spacing: 0.01em; margin: 0; text-shadow: 2px 2px 0 color-mix(in srgb, var(--grass) 55%, transparent); }
+h3 { font: 600 15px/1.25 var(--body); margin: 0; }
 
 .field { display: grid; gap: 5px; }
 .field > span:first-child { font-size: 10.5px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); font-weight: 700; }
@@ -87,29 +83,30 @@ h3 { font: 400 15px/1.25 var(--display); letter-spacing: 0.02em; margin: 0; }
   padding: clamp(28px, 6vw, 48px) 20px;
   text-align: center;
 }
-.empty-state .cog { font-size: 44px; margin-bottom: 4px; }
+.empty-state .island { font-size: 88px; margin-bottom: 4px; }
 .empty-state p { margin: 0 0 6px; }
 .button-link {
   padding: 4px 12px;
   border: 1.5px solid var(--ink);
-  border-radius: 8px;
-  background: var(--brass);
+  border-radius: var(--radius);
+  background: var(--sand);
   color: var(--ink);
-  font-weight: 650;
+  font-weight: 600;
   text-decoration: none;
-  box-shadow: 2px 2px 0 var(--hard);
+  box-shadow: var(--bevel), 1px 1px 0 var(--sand-side), 2px 2px 0 var(--sand-side), 3px 3px 0 var(--ink);
 }
 
-/* Sessions: compact cards with the lamp colour along the top. */
+/* Sessions: compact blocks capped with a layer of the session colour, like grass on dirt. */
 .sessions { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 1fr)); gap: 18px; align-items: start; }
-.session { padding: 18px 16px 12px; display: grid; gap: 14px; }
+.session { padding: 22px 16px 12px; display: grid; gap: 14px; }
 .session::before {
   content: '';
   position: absolute;
   inset: 0 0 auto;
-  height: 6px;
+  height: 8px;
   border-radius: calc(var(--radius) - 2px) calc(var(--radius) - 2px) 0 0;
-  background: var(--lamp, var(--brass));
+  background: var(--lamp, var(--grass));
+  box-shadow: inset 0 2px 0 rgba(255, 255, 255, 0.4), inset 0 -2px 0 rgba(0, 0, 0, 0.22);
   border-bottom: 1.5px solid var(--outline);
 }
 .session > header { align-items: flex-start; gap: 10px; }
@@ -117,7 +114,7 @@ h3 { font: 400 15px/1.25 var(--display); letter-spacing: 0.02em; margin: 0; }
 .session h3 { font-size: 16px; }
 .session .meta { gap: 6px; margin-top: 5px; flex-wrap: wrap; }
 .session .foot { gap: 6px; padding-top: 12px; border-top: 1.5px dashed var(--line); }
-.session.editing { box-shadow: 3px 3px 0 var(--hard), 0 0 0 3px color-mix(in srgb, var(--copper) 35%, transparent); }
+.session.editing { box-shadow: var(--block), 0 0 0 3px color-mix(in srgb, var(--water) 40%, transparent); }
 .confirm .error { font-size: 12.5px; }
 .dot.lg { width: 18px; height: 18px; }
 button.icon { width: 30px; height: 28px; padding: 0; font-size: 18px; line-height: 1; }
@@ -143,12 +140,12 @@ button.icon { width: 30px; height: 28px; padding: 0; font-size: 18px; line-heigh
   width: 24px;
   height: 24px;
   padding: 0;
-  border-radius: 50%;
-  border: 2px solid var(--ink);
-  box-shadow: inset -2px -2px 0 rgba(0, 0, 0, 0.18), inset 2px 2px 0 rgba(255, 255, 255, 0.35);
+  border-radius: 2px;
+  border: 1.5px solid var(--ink);
+  box-shadow: inset -3px -4px 0 rgba(0, 0, 0, 0.25), inset 3px 3px 0 rgba(255, 255, 255, 0.4);
 }
-.swatch:hover:not(:disabled) { transform: translateY(-2px); box-shadow: inset -2px -2px 0 rgba(0, 0, 0, 0.18), inset 2px 2px 0 rgba(255, 255, 255, 0.35); }
-.swatch[aria-checked='true'] { outline: 2.5px solid var(--copper); outline-offset: 2px; }
+.swatch:hover:not(:disabled) { transform: translateY(-2px); box-shadow: inset -3px -4px 0 rgba(0, 0, 0, 0.25), inset 3px 3px 0 rgba(255, 255, 255, 0.4), 0 2px 0 var(--ink); }
+.swatch[aria-checked='true'] { outline: 2.5px solid var(--water); outline-offset: 2px; }
 
 /* Rules: a table when wide, stacked cards when narrow. */
 .status-line { min-height: 22px; margin: -10px 0 8px; font-size: 12.5px; }
@@ -192,9 +189,10 @@ button.icon { width: 30px; height: 28px; padding: 0; font-size: 18px; line-heigh
   flex: none;
   width: 44px;
   height: 25px;
-  border-radius: 13px;
+  border-radius: var(--radius);
   background: var(--well);
   border: 1.5px solid var(--ink);
+  box-shadow: inset 2px 2px 0 var(--line);
   transition: background 0.2s;
 }
 .lever::after {
@@ -204,14 +202,15 @@ button.icon { width: 30px; height: 28px; padding: 0; font-size: 18px; line-heigh
   left: 3px;
   width: 17px;
   height: 17px;
-  border-radius: 50%;
-  background: var(--brass);
+  border-radius: 2px;
+  background: var(--sand);
   border: 1.5px solid var(--ink);
+  box-shadow: inset 0 2px 0 rgba(255, 255, 255, 0.45), inset 0 -2px 0 rgba(0, 0, 0, 0.15);
   transition: transform 0.2s;
 }
-.toggle input:checked + .lever { background: var(--copper); }
+.toggle input:checked + .lever { background: var(--grass); }
 .toggle input:checked + .lever::after { transform: translateX(18px); }
-.toggle input:focus-visible + .lever { outline: 2px solid var(--copper); outline-offset: 2px; }
+.toggle input:focus-visible + .lever { outline: 2px solid var(--water); outline-offset: 2px; }
 
 /* Backup: export and import side by side, stacked when narrow. */
 .backup { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 340px), 1fr)); gap: 18px; align-items: start; }
@@ -233,7 +232,6 @@ ul.limits li::before {
   top: 0.5em;
   width: 7px;
   height: 7px;
-  transform: rotate(45deg);
-  background: var(--brass);
+  background: var(--grass);
   border: 1.5px solid var(--ink);
 }

@@ -174,7 +174,7 @@ function Sessions({ state }: { state: AppState }) {
       </ViewHead>
       {state.sessions.length === 0 ? (
         <div class="empty-state plate">
-          <span class="cog spin" aria-hidden="true" />
+          <span class="island bob" aria-hidden="true" />
           <h3>No sessions yet</h3>
           <p class="muted">Create one, open a tab in it and sign in.</p>
           <button class="primary" onClick={() => void create()}>Create your first session</button>
@@ -493,7 +493,7 @@ function Options() {
       <header class="topbar sky">
         <div class="bar">
           <a class="brand row" href="#sessions">
-            <span class="cog spin" aria-hidden="true" />
+            <span class="cube bob" aria-hidden="true" />
             <span class="title">SessionStack</span>
           </a>
           <nav class="tabs" aria-label="Sections">

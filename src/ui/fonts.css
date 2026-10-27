@@ -1,22 +1,29 @@
 /* Latin subsets only, so the extension doesn't ship every script's font files. */
 @font-face {
-  font-family: 'Alfa Slab One';
+  font-family: 'Silkscreen';
   font-style: normal;
   font-display: swap;
   font-weight: 400;
-  src: url(../../node_modules/@fontsource/alfa-slab-one/files/alfa-slab-one-latin-400-normal.woff2) format('woff2');
+  src: url(../../node_modules/@fontsource/silkscreen/files/silkscreen-latin-400-normal.woff2) format('woff2');
 }
 @font-face {
-  font-family: 'Bitter';
+  font-family: 'Silkscreen';
   font-style: normal;
   font-display: swap;
-  font-weight: 100 900;
-  src: url(../../node_modules/@fontsource-variable/bitter/files/bitter-latin-wght-normal.woff2) format('woff2-variations');
+  font-weight: 700;
+  src: url(../../node_modules/@fontsource/silkscreen/files/silkscreen-latin-700-normal.woff2) format('woff2');
 }
 @font-face {
-  font-family: 'Bitter';
+  font-family: 'Rubik';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 300 900;
+  src: url(../../node_modules/@fontsource-variable/rubik/files/rubik-latin-wght-normal.woff2) format('woff2-variations');
+}
+@font-face {
+  font-family: 'Rubik';
   font-style: italic;
   font-display: swap;
-  font-weight: 100 900;
-  src: url(../../node_modules/@fontsource-variable/bitter/files/bitter-latin-wght-italic.woff2) format('woff2-variations');
+  font-weight: 300 900;
+  src: url(../../node_modules/@fontsource-variable/rubik/files/rubik-latin-wght-italic.woff2) format('woff2-variations');
 }

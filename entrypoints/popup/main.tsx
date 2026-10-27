@@ -41,9 +41,10 @@ function Popup() {
       <header class="sky">
         <div class="row">
           <h1 class="row grow">
-            <span class="cog spin" aria-hidden="true" />
+            <span class="cube bob" aria-hidden="true" />
             <span class="title">SessionStack</span>
           </h1>
+          <span class="island bob deco" aria-hidden="true" />
           <button class="ghost" title="Manage sessions, rules and backups" onClick={() => void browser.runtime.openOptionsPage()}>
             Settings
           </button>
