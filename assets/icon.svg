@@ -1,6 +1,39 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
-  <rect width="128" height="128" rx="28" fill="#1f4fd1"/>
-  <rect x="26" y="70" width="76" height="24" rx="7" fill="#9cc0ff"/>
-  <rect x="26" y="52" width="76" height="24" rx="7" fill="#5b8def" stroke="#1f4fd1" stroke-width="5"/>
-  <rect x="26" y="34" width="76" height="24" rx="7" fill="#ffffff" stroke="#1f4fd1" stroke-width="5"/>
+  <defs>
+    <linearGradient id="iron" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#2b3d4d"/>
+      <stop offset="1" stop-color="#141e27"/>
+    </linearGradient>
+    <linearGradient id="brass" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#fbe3a6"/>
+      <stop offset="0.5" stop-color="#d39b3a"/>
+      <stop offset="1" stop-color="#8c5e1e"/>
+    </linearGradient>
+    <linearGradient id="copper" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#f59a52"/>
+      <stop offset="1" stop-color="#b8461a"/>
+    </linearGradient>
+    <linearGradient id="parchment" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#fff8e6"/>
+      <stop offset="1" stop-color="#e8d4a8"/>
+    </linearGradient>
+  </defs>
+  <!-- Iron plate with a brass rim and rivets. -->
+  <rect x="3" y="3" width="122" height="122" rx="26" fill="url(#iron)" stroke="url(#brass)" stroke-width="6"/>
+  <g fill="#d39b3a" stroke="#6b4515" stroke-width="1.5">
+    <circle cx="20" cy="20" r="4"/>
+    <circle cx="108" cy="20" r="4"/>
+    <circle cx="20" cy="108" r="4"/>
+    <circle cx="108" cy="108" r="4"/>
+  </g>
+  <!-- Cog behind the stack. -->
+  <g opacity="0.9">
+    <circle cx="64" cy="62" r="40" fill="none" stroke="#8c5e1e" stroke-width="12" stroke-dasharray="10.47 10.47"/>
+    <circle cx="64" cy="62" r="34" fill="none" stroke="#b07a26" stroke-width="8"/>
+  </g>
+  <!-- Stacked session plates. -->
+  <rect x="24" y="74" width="80" height="24" rx="6" fill="url(#copper)" stroke="#1f2a33" stroke-width="5"/>
+  <rect x="24" y="55" width="80" height="24" rx="6" fill="url(#brass)" stroke="#1f2a33" stroke-width="5"/>
+  <rect x="24" y="36" width="80" height="24" rx="6" fill="url(#parchment)" stroke="#1f2a33" stroke-width="5"/>
+  <circle cx="36" cy="48" r="4" fill="#c4531c"/>
 </svg>

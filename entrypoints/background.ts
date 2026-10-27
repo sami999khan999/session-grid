@@ -1,4 +1,5 @@
 import { encryptJson, decryptJson } from '../src/core/crypto';
+import { badgedFavicon, inkFor } from '../src/core/favicon';
 import { serve } from '../src/core/messages';
 import { loadState, onStateChanged, saveState } from '../src/core/store';
 import { SESSION_COLORS, type AppState, type PortableCookie, type Rule, type Session } from '../src/core/types';
@@ -35,21 +36,55 @@ export default defineBackground(() => {
 
   // ------------------------------------------------------------------ badges
 
-  async function refreshBadge(tabId: number) {
+  async function tabSession(tabId: number): Promise<Session | undefined> {
     const sid = await engine.getTabSession(tabId).catch(() => null);
-    const session = sid ? (await state.get()).sessions.find((s) => s.id === sid) : undefined;
-    await browser.action.setBadgeText({ tabId, text: session ? session.tag.slice(0, 4) : '' }).catch(() => {});
-    if (session) await browser.action.setBadgeBackgroundColor({ tabId, color: SESSION_COLORS[session.color] }).catch(() => {});
+    return sid ? (await state.get()).sessions.find((s) => s.id === sid) : undefined;
+  }
+
+  async function refreshBadge(tabId: number) {
+    const session = await tabSession(tabId);
+    // Three characters is what the toolbar badge fits without clipping.
+    await browser.action.setBadgeText({ tabId, text: session ? session.tag.slice(0, 3) : '' }).catch(() => {});
+    if (!session) return;
+    const color = SESSION_COLORS[session.color];
+    await browser.action.setBadgeBackgroundColor({ tabId, color }).catch(() => {});
+    await browser.action.setBadgeTextColor?.({ tabId, color: inkFor(color) }).catch(() => {});
   }
 
   async function refreshAllBadges() {
     for (const tab of await browser.tabs.query({})) if (tab.id !== undefined) await refreshBadge(tab.id);
   }
 
-  browser.tabs.onUpdated.addListener((tabId, info) => {
+  // Favicon badge (Chrome; Firefox marks container tabs itself). The page's own favicon, as the
+  // browser resolved it, gets the session lamp and is handed to the tab's bridge to display.
+  // `applied` remembers what we set, so the resulting favIconUrl change doesn't loop.
+  const applied = new Map<number, string>();
+  async function refreshFavicon(tabId: number, favIconUrl: string | undefined) {
+    if (!chrome || (favIconUrl && applied.get(tabId) === favIconUrl)) return;
+    const session = await tabSession(tabId);
+    if (!session || !(await state.get()).prefs.faviconBadge) return;
+    const href = await badgedFavicon(favIconUrl, SESSION_COLORS[session.color], session.tag);
+    applied.set(tabId, href);
+    await browser.tabs.sendMessage(tabId, { type: 'favicon', href }, { frameId: 0 }).catch(() => {});
+  }
+
+  // Chrome often learns the favicon after `complete`. Give it a moment, then fall back to the
+  // conventional /favicon.ico (a plain lettered tile if that fails too).
+  async function faviconAfterLoad(tabId: number) {
+    await new Promise((r) => setTimeout(r, 1000));
+    const tab = await browser.tabs.get(tabId).catch(() => null);
+    if (!tab?.url || tab.favIconUrl) return;
+    const origin = /^https?:/.test(tab.url) ? new URL(tab.url).origin : null;
+    await refreshFavicon(tabId, origin ? `${origin}/favicon.ico` : undefined);
+  }
+
+  browser.tabs.onUpdated.addListener((tabId, info, tab) => {
     if (info.status === 'loading' || info.url) void refreshBadge(tabId);
+    if (info.favIconUrl !== undefined) void refreshFavicon(tabId, info.favIconUrl);
+    else if (info.status === 'complete' && !tab.favIconUrl) void faviconAfterLoad(tabId);
   });
   browser.tabs.onActivated.addListener(({ tabId }) => void refreshBadge(tabId));
+  browser.tabs.onRemoved.addListener((tabId) => applied.delete(tabId));
 
   // ------------------------------------------------------------------ hotkeys
 

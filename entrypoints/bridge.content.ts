@@ -10,6 +10,22 @@ function prefixTitle(tag: string) {
   new MutationObserver(apply).observe(document, { subtree: true, childList: true, characterData: true });
 }
 
+/** Show the session-badged favicon: the page's own icon links are parked, ours goes last. */
+function setFavicon(href: string) {
+  const head = document.head ?? document.documentElement;
+  for (const link of head.querySelectorAll<HTMLLinkElement>('link[rel~="icon"]:not([data-sessionstack])')) {
+    link.dataset.sessionstackRel = link.rel;
+    link.rel = 'sessionstack-parked-icon';
+  }
+  let ours = head.querySelector<HTMLLinkElement>('link[data-sessionstack]');
+  if (!ours) {
+    ours = Object.assign(document.createElement('link'), { rel: 'icon', type: 'image/png' });
+    ours.dataset.sessionstack = '';
+  }
+  ours.href = href;
+  head.append(ours);
+}
+
 /**
  * Isolated-world bridge between the page shim and the background: forwards cookie writes,
  * pushes fresh snapshots, and repairs the shim's decision when it was made from stale data.
@@ -35,8 +51,9 @@ export default defineContentScript({
       return sessionId ?? '';
     };
 
-    browser.runtime.onMessage.addListener((msg: { type?: string }) => {
+    browser.runtime.onMessage.addListener((msg: { type?: string; href?: string }) => {
       if (msg?.type === 'cookiesChanged' && shimKey()) void push();
+      if (msg?.type === 'favicon' && msg.href && window === window.top) setFavicon(msg.href);
     });
 
     if (location.protocol !== 'http:' && location.protocol !== 'https:') return;

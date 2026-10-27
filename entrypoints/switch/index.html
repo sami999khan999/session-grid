@@ -4,13 +4,12 @@
     <meta charset="UTF-8" />
     <meta name="manifest.exclude" content="['firefox']" />
     <title>Switching session…</title>
-    <style>
-      :root { color-scheme: light dark; font: 14px system-ui, sans-serif; }
-      body { margin: 0; min-height: 100vh; display: grid; place-items: center; background: Canvas; color: GrayText; }
-    </style>
   </head>
   <body>
-    <p id="msg">Switching session…</p>
+    <main class="plate">
+      <span class="cog spin" aria-hidden="true"></span>
+      <p id="msg">Switching session…</p>
+    </main>
     <script type="module" src="./main.ts"></script>
   </body>
 </html>

@@ -1,4 +1,6 @@
 import { call } from '../../src/core/messages';
+import '../../src/ui/theme.css';
+import './style.css';
 
 // Hash: "<sessionId>|<original URL>", written by the auto-mapping redirect rule. Not decoded:
 // that would also decode the original URL's own escapes.

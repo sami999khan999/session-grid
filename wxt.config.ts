@@ -5,6 +5,8 @@ export default defineConfig({
   srcDir: '.',
   manifestVersion: 3,
   vite: () => ({ plugins: [preact()] }),
+  // Keep previous release artifacts out of the Firefox sources zip.
+  zip: { excludeSources: ['release/**'] },
   manifest: ({ browser }) => ({
     name: 'SessionStack',
     description: 'Run several isolated logins for the same site side by side, one session per tab.',

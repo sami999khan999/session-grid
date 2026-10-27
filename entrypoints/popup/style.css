@@ -1,13 +1,51 @@
-body { width: 320px; }
-header { padding: 12px 14px 10px; border-bottom: 1px solid var(--border); }
-header h1 { font-size: 14px; margin: 0 0 2px; }
-ul { list-style: none; margin: 0; padding: 6px; }
-li { padding: 7px 8px; border-radius: var(--radius); }
-li.current { background: var(--panel); }
-li .name { font-weight: 500; }
-li .tag { font-size: 11px; }
-li button { padding: 2px 8px; font-size: 12px; }
-.empty { padding: 14px; text-align: center; }
-form { padding: 8px 14px; border-top: 1px solid var(--border); }
-footer { padding: 8px 14px 12px; display: flex; justify-content: space-between; }
-.error { padding: 0 14px 8px; }
+body { width: 340px; }
+header { padding: 13px 14px 14px; }
+header h1 { font-size: 20px; line-height: 1.1; margin: 0; gap: 9px; font-weight: 400; }
+header .ghost { color: var(--cream); border-color: rgba(244, 236, 219, 0.35); }
+header .ghost:hover:not(:disabled) { background: rgba(244, 236, 219, 0.12); }
+.gauge {
+  margin-top: 12px;
+  padding: 7px 10px;
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.28);
+  border: 1px solid rgba(244, 236, 219, 0.18);
+}
+.gauge .dot { border-color: var(--cream); }
+.gauge .label { font-size: 10px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: var(--brass); }
+.gauge strong { color: var(--cream); }
+
+.section-label {
+  margin: 16px 16px 4px;
+  font: 13px/1 var(--display);
+  letter-spacing: 0.04em;
+}
+.section-label span:last-child {
+  min-width: 20px;
+  text-align: center;
+  font: 700 11px/18px var(--body);
+  border-radius: 9px;
+  color: var(--copper-text);
+  background: var(--copper);
+}
+ul { list-style: none; margin: 0; padding: 4px 10px 12px; display: grid; gap: 4px; }
+li {
+  padding: 8px 10px;
+  border-radius: 9px;
+  border: 1.5px solid transparent;
+  transition: background 0.12s, border-color 0.12s;
+}
+li:hover { background: var(--card); border-color: var(--line); }
+li.current { background: var(--card); border-color: var(--outline); box-shadow: 3px 3px 0 var(--hard); }
+li .name { font-weight: 700; font-size: 13.5px; }
+li .meta { gap: 6px; margin-top: 3px; }
+li .actions { gap: 6px; flex: none; }
+.empty {
+  margin: 8px 12px 14px;
+  padding: 16px;
+  text-align: center;
+  font-style: italic;
+  border: 1.5px dashed var(--field-border);
+  border-radius: var(--radius);
+}
+form { margin: 2px 12px 14px; padding: 10px; }
+.error { padding: 0 16px 8px; margin: 0; }

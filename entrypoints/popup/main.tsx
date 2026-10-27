@@ -2,6 +2,7 @@ import { render } from 'preact';
 import { useEffect, useState } from 'preact/hooks';
 import { call } from '../../src/core/messages';
 import { SESSION_COLORS } from '../../src/core/types';
+import { mountGlassScroll } from '../../src/ui/scroll';
 import { draftSession } from '../../src/ui/sessions';
 import { useAppState } from '../../src/ui/useAppState';
 import '../../src/ui/theme.css';
@@ -37,57 +38,74 @@ function Popup() {
 
   return (
     <>
-      <header>
-        <h1>SessionStack</h1>
-        <div class="row muted">
-          This tab:
-          {current ? (
-            <span class="row" style={{ gap: 5 }}>
-              <span class="dot" style={{ background: SESSION_COLORS[current.color] }} />
-              <strong style={{ color: 'var(--text)' }}>{current.name}</strong>
-            </span>
-          ) : (
-            <span>default browser session</span>
+      <header class="sky">
+        <div class="row">
+          <h1 class="row grow">
+            <span class="cog spin" aria-hidden="true" />
+            <span class="title">SessionStack</span>
+          </h1>
+          <button class="ghost" title="Manage sessions, rules and backups" onClick={() => void browser.runtime.openOptionsPage()}>
+            Settings
+          </button>
+        </div>
+        <div class="gauge row">
+          <span class="dot" style={{ background: current ? SESSION_COLORS[current.color] : 'var(--border)' }} />
+          <div class="grow">
+            <div class="label">This tab</div>
+            <div class="truncate">{current ? <strong>{current.name}</strong> : 'Default browser session'}</div>
+          </div>
+          {tab?.web && current && (
+            <button class="ghost" title="Reload this tab in the default browser session" onClick={run(() => call('assignTab', { tabId: tab.id, sessionId: null }))}>
+              Leave
+            </button>
           )}
         </div>
       </header>
+
+      <div class="section-label row">
+        <span class="grow">Sessions</span>
+        <span>{state.sessions.length}</span>
+      </div>
 
       {state.sessions.length === 0 ? (
         <p class="empty muted">No sessions yet. Create one below, then open a tab in it and sign in.</p>
       ) : (
         <ul>
-          {state.sessions.map((s, i) => (
-            <li key={s.id} class={`row ${s.id === tab?.sessionId ? 'current' : ''}`}>
-              <span class="dot" style={{ background: SESSION_COLORS[s.color] }} />
-              <div class="grow">
-                <div class="name truncate">{s.name}</div>
-                <div class="tag muted">
-                  {s.tag}
-                  {i < 4 ? ` · Alt+Shift+${i + 1}` : ''}
+          {state.sessions.map((s, i) => {
+            const here = s.id === tab?.sessionId;
+            return (
+              <li key={s.id} class={`row ${here ? 'current' : ''}`}>
+                <span class="dot" style={{ background: SESSION_COLORS[s.color] }} />
+                <div class="grow">
+                  <div class="name truncate">{s.name}</div>
+                  <div class="meta row">
+                    <span class="chip">{s.tag}</span>
+                    {i < 4 && <kbd>Alt+Shift+{i + 1}</kbd>}
+                  </div>
                 </div>
-              </div>
-              {tab?.web && s.id !== tab.sessionId && (
-                <button title="Reload this tab in this session" onClick={run(() => call('assignTab', { tabId: tab.id, sessionId: s.id }))}>
-                  Move here
-                </button>
-              )}
-              <button class="primary" title="Open a new tab in this session" onClick={run(() => call('openInSession', { sessionId: s.id }), true)}>
-                New tab
-              </button>
-            </li>
-          ))}
-          {tab?.web && tab.sessionId && (
-            <li class="row">
-              <span class="dot" style={{ background: 'var(--border)' }} />
-              <div class="grow muted">Default browser session</div>
-              <button onClick={run(() => call('assignTab', { tabId: tab.id, sessionId: null }))}>Move here</button>
-            </li>
-          )}
+                <div class="actions row">
+                  {here ? (
+                    <span class="stamp">Active</span>
+                  ) : (
+                    tab?.web && (
+                      <button class="ghost" title="Reload this tab in this session" onClick={run(() => call('assignTab', { tabId: tab.id, sessionId: s.id }))}>
+                        Move
+                      </button>
+                    )
+                  )}
+                  <button class="primary small" title="Open a new tab in this session" onClick={run(() => call('openInSession', { sessionId: s.id }), true)}>
+                    New tab
+                  </button>
+                </div>
+              </li>
+            );
+          })}
         </ul>
       )}
 
+      {error && <p class="error">{error}</p>}
       <form
-        class="row"
+        class="row plate"
         onSubmit={(e) => {
           e.preventDefault();
           void run(async () => {
@@ -96,17 +114,12 @@ function Popup() {
           })();
         }}
       >
-        <input class="grow" placeholder="New session name" value={newName} onInput={(e) => setNewName(e.currentTarget.value)} />
+        <input class="grow" placeholder="New session name" aria-label="New session name" value={newName} onInput={(e) => setNewName(e.currentTarget.value)} />
         <button type="submit">Add</button>
       </form>
-      {error && <p class="error">{error}</p>}
-      <footer>
-        <button class="link" onClick={() => void browser.runtime.openOptionsPage()}>
-          Manage sessions & rules
-        </button>
-      </footer>
     </>
   );
 }
 
 render(<Popup />, document.getElementById('app')!);
+mountGlassScroll();

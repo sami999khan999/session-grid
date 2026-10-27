@@ -1,0 +1,4 @@
+body { min-height: 100vh; display: grid; place-items: center; }
+main { display: flex; align-items: center; gap: 14px; padding: 18px 26px; }
+.cog { font-size: 32px; animation-duration: 2.5s; }
+#msg { margin: 0; font-size: 16px; font-weight: 600; }

@@ -17,6 +17,9 @@
     "test:e2e": "wxt build && playwright test"
   },
   "dependencies": {
+    "@fontsource-variable/bitter": "^5.3.0",
+    "@fontsource/alfa-slab-one": "^5.3.0",
+    "glass-scroll": "0.2.0",
     "preact": "^11.0.2",
     "tldts": "^7.4.19",
     "tough-cookie": "^6.0.2"
