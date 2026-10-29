@@ -1,11 +1,11 @@
 import { encryptJson, decryptJson } from '../src/core/crypto';
 import { badgedFavicon, inkFor } from '../src/core/favicon';
 import { serve } from '../src/core/messages';
-import { loadState, onStateChanged, saveState } from '../src/core/store';
+import { kv, loadState, onStateChanged, saveState } from '../src/core/store';
 import { SESSION_COLORS, type AppState, type PortableCookie, type Rule, type Session } from '../src/core/types';
 import { ChromeEngine } from '../src/engines/chromium';
 import { TabGrouper } from '../src/engines/chromium/groups';
-import type { IsolationEngine } from '../src/engines/engine';
+import { isWebUrl, type IsolationEngine } from '../src/engines/engine';
 import { FirefoxEngine } from '../src/engines/firefox';
 
 interface ExportPayload {
@@ -48,10 +48,45 @@ export default defineBackground(() => {
     await grouper?.sync(tabId, session, (await state.get()).prefs.tabGroups);
     // Three characters is what the toolbar badge fits without clipping.
     await browser.action.setBadgeText({ tabId, text: session ? session.tag.slice(0, 3) : '' }).catch(() => {});
+    scheduleSnapshot();
     if (!session) return;
     const color = SESSION_COLORS[session.color];
     await browser.action.setBadgeBackgroundColor({ tabId, color }).catch(() => {});
     await browser.action.setBadgeTextColor?.({ tabId, color: inkFor(color) }).catch(() => {});
+  }
+
+  // ------------------------------------------------------------------ saved tabs
+
+  // Each session's tabs (URLs in window and strip order), so the popup's Open can bring them
+  // back. A session with no open tabs keeps its last snapshot: closing its group, its window or
+  // the browser leaves behind what was open.
+  const savedTabs = kv<Record<string, string[]>>('local', 'savedTabs', {});
+  let snapshotTimer: ReturnType<typeof setTimeout> | undefined;
+
+  function scheduleSnapshot() {
+    clearTimeout(snapshotTimer);
+    // Closing a group removes its tabs one by one; wait until they're all gone.
+    snapshotTimer = setTimeout(() => void snapshot(), 1500);
+  }
+
+  async function openTabsBySession() {
+    const tabs = (await browser.tabs.query({})).sort((a, b) => a.windowId - b.windowId || a.index - b.index);
+    const open: Record<string, Browser.tabs.Tab[]> = {};
+    for (const tab of tabs) {
+      const sid = tab.id === undefined ? null : await engine.getTabSession(tab.id).catch(() => null);
+      if (sid) (open[sid] ??= []).push(tab);
+    }
+    return open;
+  }
+
+  async function snapshot() {
+    const live = new Set((await state.get()).sessions.map((s) => s.id));
+    const next = Object.fromEntries(Object.entries(await savedTabs.get()).filter(([sid]) => live.has(sid)));
+    for (const [sid, tabs] of Object.entries(await openTabsBySession())) {
+      const urls = tabs.map((t) => t.url || t.pendingUrl).filter(isWebUrl);
+      if (urls.length) next[sid] = urls;
+    }
+    await savedTabs.set(next);
   }
 
   async function refreshAllBadges() {
@@ -123,10 +158,12 @@ export default defineBackground(() => {
     await engine.assignTab(tabId, sessionId).catch(() => {});
     await refreshBadge(tabId);
   }
-  browser.tabs.onRemoved.addListener((tabId) => {
+  browser.tabs.onRemoved.addListener((tabId, { isWindowClosing }) => {
     applied.delete(tabId);
     attachedAt.delete(tabId);
+    if (!isWindowClosing) scheduleSnapshot();
   });
+  browser.tabs.onMoved.addListener(scheduleSnapshot);
 
   // ------------------------------------------------------------------ hotkeys
 
@@ -186,6 +223,24 @@ export default defineBackground(() => {
 
     async openInSession({ sessionId, url }) {
       await engine.openInSession(sessionId, url);
+    },
+
+    async resumeSession({ sessionId }) {
+      const open = (await openTabsBySession())[sessionId];
+      if (open?.length) {
+        const tab = open.find((t) => t.active) ?? open[0]!;
+        await browser.tabs.update(tab.id!, { active: true });
+        await browser.windows.update(tab.windowId, { focused: true });
+        return;
+      }
+      const urls = (await savedTabs.get())[sessionId] ?? [];
+      if (!urls.length) return engine.openInSession(sessionId);
+      for (const [i, url] of urls.entries()) await engine.openInSession(sessionId, url, i === 0);
+    },
+
+    async sessionTabs() {
+      const [open, saved, s] = await Promise.all([openTabsBySession(), savedTabs.get(), state.get()]);
+      return Object.fromEntries(s.sessions.map((x) => [x.id, { open: open[x.id]?.length ?? 0, saved: saved[x.id]?.length ?? 0 }]));
     },
 
     async assignTab({ tabId, sessionId }) {

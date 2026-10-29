@@ -14,11 +14,12 @@ header .ghost:hover:not(:disabled) { background: rgba(246, 241, 255, 0.12); bord
   box-shadow: inset 2px 2px 0 rgba(0, 0, 0, 0.25);
 }
 .gauge .dot { border-color: var(--cream); }
+.gauge .dot.none { background: transparent; border-style: dashed; box-shadow: none; opacity: 0.6; }
 .gauge .label { font-size: 10px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: var(--grass); }
 .gauge strong { color: var(--cream); }
 
 .section-label {
-  margin: 16px 16px 4px;
+  margin: 14px 16px 2px;
   font: 700 12px/1 var(--display);
   letter-spacing: 0.02em;
 }
@@ -32,18 +33,36 @@ header .ghost:hover:not(:disabled) { background: rgba(246, 241, 255, 0.12); bord
   border: 1.5px solid var(--ink);
   box-shadow: inset 0 -2px 0 rgba(0, 0, 0, 0.18);
 }
-ul { list-style: none; margin: 0; padding: 4px 10px 12px; display: grid; gap: 4px; }
+ul { list-style: none; margin: 0; padding: 6px 12px 14px; display: grid; gap: 8px; }
+/* Each session is a small plate with its colour as a stripe down the left edge. */
 li {
-  padding: 8px 10px;
+  display: grid;
+  gap: 7px;
+  padding: 9px 10px 9px 13px;
   border-radius: var(--radius);
-  border: 1.5px solid transparent;
-  transition: background 0.12s, border-color 0.12s;
+  border: 1.5px solid var(--outline);
+  background:
+    linear-gradient(90deg, var(--c) 0 4px, transparent 4px),
+    var(--card);
+  box-shadow: inset 0 2px 0 rgba(255, 255, 255, 0.06), 1px 1px 0 var(--side), 2px 2px 0 var(--side-2);
+  transition: border-color 0.12s, box-shadow 0.12s;
 }
-li:hover { background: var(--card); border-color: var(--line); }
-li.current { background: var(--card); border-color: var(--outline); box-shadow: var(--block); }
-li .name { font-weight: 600; font-size: 13.5px; }
-li .meta { gap: 6px; margin-top: 3px; }
-li .actions { gap: 6px; flex: none; }
+li:hover { border-color: color-mix(in srgb, var(--c) 60%, var(--outline)); }
+li.current { border-color: var(--grass-side); box-shadow: 0 0 0 2px color-mix(in srgb, var(--grass) 35%, transparent), var(--block); }
+li .name { font-weight: 600; font-size: 14px; line-height: 1.25; }
+li .bottom { gap: 6px; }
+li button { white-space: nowrap; }
+li button.open { min-width: 54px; }
+li .count {
+  flex: none;
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+  color: var(--muted);
+}
+li .count.live { color: var(--grass-side); }
+@media (prefers-color-scheme: dark) { li .count.live { color: var(--grass); } }
+button.icon { width: 26px; padding: 2px 0; font-size: 15px; line-height: 1; font-weight: 700; }
 .empty {
   margin: 8px 12px 14px;
   padding: 16px;

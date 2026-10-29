@@ -16,6 +16,10 @@ export interface Api {
   saveRules: { req: { rules: Rule[] }; res: void };
   setPrefs: { req: { prefs: Partial<Prefs> }; res: void };
   openInSession: { req: { sessionId: string; url?: string }; res: void };
+  /** Bring back a session's tabs: focus them if open, else reopen the saved snapshot. */
+  resumeSession: { req: { sessionId: string }; res: void };
+  /** Per session: how many of its tabs are open now and how many are saved. */
+  sessionTabs: { req: {}; res: Record<string, { open: number; saved: number }> };
   assignTab: { req: { tabId: number; sessionId: string | null }; res: void };
   /** Switch page: join the sender tab to a session (auto-mapping redirect target). */
   joinSession: { req: { sessionId: string }; res: void };

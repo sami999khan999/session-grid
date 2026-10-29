@@ -180,8 +180,8 @@ export class ChromeEngine implements IsolationEngine {
     return this.tabs.get(tabId) ?? null;
   }
 
-  async openInSession(sessionId: string, url?: string): Promise<void> {
-    const tab = await browser.tabs.create({ active: true });
+  async openInSession(sessionId: string, url?: string, active = true): Promise<void> {
+    const tab = await browser.tabs.create({ active });
     if (tab.id === undefined) return;
     await this.setTab(tab.id, sessionId);
     if (url) await browser.tabs.update(tab.id, { url });

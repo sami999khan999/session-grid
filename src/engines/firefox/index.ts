@@ -110,8 +110,8 @@ export class FirefoxEngine implements IsolationEngine {
     return store;
   }
 
-  async openInSession(sessionId: string, url?: string): Promise<void> {
-    const tab = await ff.tabs.create({ cookieStoreId: await this.storeFor(sessionId), active: true, ...(url ? { url } : {}) });
+  async openInSession(sessionId: string, url?: string, active = true): Promise<void> {
+    const tab = await ff.tabs.create({ cookieStoreId: await this.storeFor(sessionId), active, ...(url ? { url } : {}) });
     if (tab.id !== undefined && url) this.justOpened.add(tab.id);
   }
 

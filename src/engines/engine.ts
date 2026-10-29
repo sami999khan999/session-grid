@@ -6,7 +6,7 @@ export interface IsolationEngine {
   /** Bring engine-side resources (containers, rules) in line with the saved sessions. */
   sync(state: AppState): Promise<void>;
   getTabSession(tabId: number): Promise<string | null>;
-  openInSession(sessionId: string, url?: string): Promise<void>;
+  openInSession(sessionId: string, url?: string, active?: boolean): Promise<void>;
   /** Move a tab into a session (`null` = the browser's default session). */
   assignTab(tabId: number, sessionId: string | null): Promise<void>;
   clearSession(sessionId: string): Promise<void>;

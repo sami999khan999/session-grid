@@ -11,6 +11,7 @@ import './style.css';
 function Popup() {
   const state = useAppState();
   const [tab, setTab] = useState<{ id: number; sessionId: string | null; web: boolean } | null>(null);
+  const [tabCounts, setTabCounts] = useState<Record<string, { open: number; saved: number }>>({});
   const [newName, setNewName] = useState('');
   const [error, setError] = useState('');
 
@@ -19,6 +20,7 @@ function Popup() {
     if (active?.id === undefined) return;
     const info = await call('getTabInfo', { tabId: active.id });
     setTab({ id: active.id, sessionId: info.sessionId, web: /^https?:/.test(active.url ?? '') });
+    setTabCounts(await call('sessionTabs', {}));
   };
   useEffect(() => void refreshTab(), []);
 
@@ -50,7 +52,7 @@ function Popup() {
           </button>
         </div>
         <div class="gauge row">
-          <span class="dot" style={{ background: current ? SESSION_COLORS[current.color] : 'var(--border)' }} />
+          <span class={`dot ${current ? '' : 'none'}`} style={current ? { background: SESSION_COLORS[current.color] } : undefined} />
           <div class="grow">
             <div class="label">This tab</div>
             <div class="truncate">{current ? <strong>{current.name}</strong> : 'Default browser session'}</div>
@@ -74,28 +76,36 @@ function Popup() {
         <ul>
           {state.sessions.map((s, i) => {
             const here = s.id === tab?.sessionId;
+            const { open = 0, saved = 0 } = tabCounts[s.id] ?? {};
+            const plural = (n: number) => `${n} tab${n === 1 ? '' : 's'}`;
             return (
-              <li key={s.id} class={`row ${here ? 'current' : ''}`}>
-                <span class="dot" style={{ background: SESSION_COLORS[s.color] }} />
-                <div class="grow">
-                  <div class="name truncate">{s.name}</div>
-                  <div class="meta row">
-                    <span class="chip">{s.tag}</span>
-                    {i < 4 && <kbd>Alt+Shift+{i + 1}</kbd>}
-                  </div>
-                </div>
-                <div class="actions row">
+              <li key={s.id} class={here ? 'current' : ''} style={{ '--c': SESSION_COLORS[s.color] }}>
+                <div class="top row">
+                  <span class="name grow truncate">{s.name}</span>
                   {here ? (
                     <span class="stamp">Active</span>
                   ) : (
-                    tab?.web && (
-                      <button class="ghost" title="Reload this tab in this session" onClick={run(() => call('assignTab', { tabId: tab.id, sessionId: s.id }))}>
-                        Move
-                      </button>
-                    )
+                    (open || saved) > 0 && <span class={`count ${open ? 'live' : ''}`}>{open ? `${open} open` : `${saved} saved`}</span>
                   )}
-                  <button class="primary small" title="Open a new tab in this session" onClick={run(() => call('openInSession', { sessionId: s.id }), true)}>
-                    New tab
+                </div>
+                <div class="bottom row">
+                  <span class="chip">{s.tag}</span>
+                  {i < 4 && <kbd>Alt+Shift+{i + 1}</kbd>}
+                  <span class="grow" />
+                  {!here && tab?.web && (
+                    <button class="ghost" title="Reload this tab in this session" onClick={run(() => call('assignTab', { tabId: tab.id, sessionId: s.id }))}>
+                      Move
+                    </button>
+                  )}
+                  <button class="ghost icon" title="Open a new tab in this session" aria-label="New tab" onClick={run(() => call('openInSession', { sessionId: s.id }), true)}>
+                    +
+                  </button>
+                  <button
+                    class="primary small open"
+                    title={open ? `Switch to this session's ${plural(open)}` : saved ? `Reopen ${plural(saved)} from last time` : 'Open a new tab in this session'}
+                    onClick={run(() => call('resumeSession', { sessionId: s.id }), true)}
+                  >
+                    {open ? 'Show' : 'Open'}
                   </button>
                 </div>
               </li>

@@ -10,7 +10,7 @@ Every tab belongs to a *session* with its own cookies and site storage. Keep the
 
 ![Chrome MV3](https://img.shields.io/badge/Chrome-MV3-1f2a33?style=for-the-badge&logo=googlechrome&logoColor=e0a93f)
 ![Firefox 140+](https://img.shields.io/badge/Firefox-140%2B-1f2a33?style=for-the-badge&logo=firefoxbrowser&logoColor=e4612a)
-![Version 0.3.0](https://img.shields.io/badge/version-0.3.0-8fd14f?style=for-the-badge)
+![Version 0.4.0](https://img.shields.io/badge/version-0.4.0-8fd14f?style=for-the-badge)
 ![TypeScript](https://img.shields.io/badge/TypeScript-Preact-e0a93f?style=for-the-badge&logo=typescript&logoColor=1f2a33)
 
 <img src="docs/screenshots/popup-light.png" width="300" alt="Toolbar popup, light theme" />
@@ -27,6 +27,7 @@ Every tab belongs to a *session* with its own cookies and site storage. Keep the
 |---|---|
 | 🗂️ **Sessions per tab** | Open a new tab in a session, or move the current tab into one, from the toolbar popup. A session can have as many tabs as you like, and they share one login. |
 | 🔒 **Real isolation** | Each session gets its own cookies, `document.cookie`, `cookieStore`, `localStorage` and `sessionStorage`. |
+| 💾 **Saved tabs** | Each session remembers its tabs. Close its group, its window or the browser, then click **Open** in the popup to get the same pages back, still signed in. If the tabs are already open, the button says **Show** and switches to them. |
 | 🏷️ **Tab groups** | In Chrome, each session's tabs sit in a tab group labelled with the session's full name and colour. Drag a tab into a group to move it into that session; drag it out to return it to the default session. |
 | 💡 **Marked tabs** | The site's tab icon gets the session's coloured lamp, and the title gets the session tag, e.g. `[ADM] Dashboard`. The toolbar badge shows the tag too. |
 | 🧭 **Auto-session rules** | URL globs such as `*.staging.example.com` or `https://example.com/admin/*` send navigations into a session automatically. |
@@ -48,17 +49,17 @@ Ready-made builds are in [`release/`](release/).
 **Chrome, Edge, Brave and other Chromium browsers**
 1. Open `chrome://extensions` and turn on **Developer mode**.
 2. Click **Load unpacked** and pick `release/chrome-mv3`.
-   (Or install `release/sessionstack-0.3.0-chrome.zip` through a store or your browser's policy tools.)
+   (Or install `release/sessionstack-0.4.0-chrome.zip` through a store or your browser's policy tools.)
 
 **Firefox 140+**
 1. Open `about:debugging#/runtime/this-firefox`.
 2. Click **Load Temporary Add-on…** and pick `release/firefox-mv3/manifest.json`.
-   (`release/sessionstack-0.3.0-firefox.zip` is the package for addons.mozilla.org, with `sessionstack-0.3.0-sources.zip` as its source upload.)
+   (`release/sessionstack-0.4.0-firefox.zip` is the package for addons.mozilla.org, with `sessionstack-0.4.0-sources.zip` as its source upload.)
 
 ## Using it
 
 1. Click the toolbar icon and add a session, e.g. *Attorney*.
-2. Click **New tab** next to it and sign in. That login now belongs to the session.
+2. Click **Open** next to it and sign in. That login now belongs to the session.
 3. Add another session and sign in as someone else. Both stay signed in, side by side.
 4. Open **Settings** to rename sessions, change their badge and colour, set up auto-session rules, adjust preferences or back up everything.
 
