@@ -136,8 +136,8 @@ export default defineBackground(() => {
   });
 
   // Group membership follows the user's drags: into a session's group moves the tab into that
-  // session; out of it returns the tab to the default session. Our own grouping always matches
-  // the tab's session, so it never triggers a move.
+  // session; out of it returns the tab to the default session. Our own grouping matches the
+  // tab's session, and our own ungrouping is skipped, so neither triggers a move.
   async function groupChanged(tabId: number, groupId: number) {
     if (!grouper || !(await state.get()).prefs.tabGroups) return;
     const current = await engine.getTabSession(tabId).catch(() => null);
@@ -146,7 +146,9 @@ export default defineBackground(() => {
       if (target && target !== current) await moveTab(tabId, target);
       return;
     }
-    if (!current) return;
+    // A tab we ungrouped ourselves: Chrome can put a freshly created tab into the group next to it
+    // before its session is set, and `sync` takes it back out. That isn't the user leaving.
+    if (grouper.releasedByUs(tabId) || !current) return;
     // Leaving a group is also what pinning a tab or dragging it to another window looks like.
     await new Promise((r) => setTimeout(r, 500));
     const tab = await browser.tabs.get(tabId).catch(() => null);

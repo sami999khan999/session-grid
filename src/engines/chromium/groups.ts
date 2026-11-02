@@ -53,6 +53,14 @@ export class TabGrouper {
     return entry ? entry[0].split(':')[1]! : null;
   }
 
+  /** Tabs we just took out of one of our groups, so the background doesn't read it as a user drag. */
+  private released = new Set<number>();
+
+  /** True (once) if the tab's last ungroup was ours. */
+  releasedByUs(tabId: number): boolean {
+    return this.released.delete(tabId);
+  }
+
   // Syncs run one at a time, so two tabs of a new session don't each create a group.
   private queue: Promise<unknown> = Promise.resolve();
 
@@ -69,7 +77,10 @@ export class TabGrouper {
     const inGroup = tab.groupId !== undefined && tab.groupId !== -1;
 
     if (!session || !enabled) {
-      if (inGroup && (await this.ours(tab.groupId!))) await browser.tabs.ungroup(tabId).catch(() => {});
+      if (inGroup && (await this.ours(tab.groupId!))) {
+        this.released.add(tabId);
+        await browser.tabs.ungroup(tabId).catch(() => this.released.delete(tabId));
+      }
       return;
     }
 
