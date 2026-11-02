@@ -29,7 +29,8 @@ export function startServer(): Promise<{ port: number; close: () => void }> {
       return;
     }
     res.setHeader('content-type', 'text/html');
-    res.end(page(cookie));
+    const delay = Number(url.searchParams.get('delay') ?? 0);
+    setTimeout(() => res.end(page(cookie)), delay);
   });
   return new Promise((resolve) =>
     server.listen(0, '127.0.0.1', () => resolve({ port: (server.address() as AddressInfo).port, close: () => server.close() })),

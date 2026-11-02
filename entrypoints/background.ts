@@ -128,11 +128,22 @@ export default defineBackground(() => {
     else if (info.status === 'complete' && !tab.favIconUrl) void faviconAfterLoad(tabId);
   });
   browser.tabs.onActivated.addListener(({ tabId }) => void refreshBadge(tabId));
-  // A tab dragged to another window joins its session's group there.
-  const attachedAt = new Map<number, number>();
+  // A tab dragged to another window joins its session's group there. `relocatedAt` also covers
+  // tabs Chrome replaced with a new id: those start outside the group, which isn't the user
+  // leaving it.
+  const relocatedAt = new Map<number, number>();
   browser.tabs.onAttached.addListener((tabId) => {
-    attachedAt.set(tabId, Date.now());
+    relocatedAt.set(tabId, Date.now());
     void refreshBadge(tabId);
+  });
+  browser.tabs.onReplaced.addListener((addedTabId, removedTabId) => {
+    relocatedAt.set(addedTabId, Date.now());
+    relocatedAt.delete(removedTabId);
+    applied.delete(removedTabId);
+    void (async () => {
+      await chrome?.replaceTab(removedTabId, addedTabId);
+      await refreshBadge(addedTabId);
+    })();
   });
 
   // Group membership follows the user's drags: into a session's group moves the tab into that
@@ -152,7 +163,7 @@ export default defineBackground(() => {
     // Leaving a group is also what pinning a tab or dragging it to another window looks like.
     await new Promise((r) => setTimeout(r, 500));
     const tab = await browser.tabs.get(tabId).catch(() => null);
-    if (!tab || tab.pinned || tab.groupId !== -1 || Date.now() - (attachedAt.get(tabId) ?? 0) < 2000) return;
+    if (!tab || tab.pinned || tab.groupId !== -1 || Date.now() - (relocatedAt.get(tabId) ?? 0) < 2000) return;
     if ((await engine.getTabSession(tabId).catch(() => null)) === current) await moveTab(tabId, null);
   }
 
@@ -162,7 +173,7 @@ export default defineBackground(() => {
   }
   browser.tabs.onRemoved.addListener((tabId, { isWindowClosing }) => {
     applied.delete(tabId);
-    attachedAt.delete(tabId);
+    relocatedAt.delete(tabId);
     if (!isWindowClosing) scheduleSnapshot();
   });
   browser.tabs.onMoved.addListener(scheduleSnapshot);

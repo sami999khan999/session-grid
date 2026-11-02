@@ -181,10 +181,21 @@ export class ChromeEngine implements IsolationEngine {
   }
 
   async openInSession(sessionId: string, url?: string, active = true): Promise<void> {
-    const tab = await browser.tabs.create({ active });
+    // With a URL to load, start from about:blank: navigating a background tab away from Chrome's
+    // New Tab page swaps in a new tab (onReplaced), which would leave the session behind.
+    const tab = await browser.tabs.create({ active, ...(url ? { url: 'about:blank' } : {}) });
     if (tab.id === undefined) return;
     await this.setTab(tab.id, sessionId);
     if (url) await browser.tabs.update(tab.id, { url });
+  }
+
+  /** Chrome swapped a tab's contents into a new tab id (New Tab page, prerender, Memory Saver). */
+  async replaceTab(removedTabId: number, addedTabId: number): Promise<void> {
+    await this.ready;
+    const sid = this.tabs.get(removedTabId);
+    if (!sid) return;
+    this.tabs.delete(removedTabId);
+    await this.setTab(addedTabId, sid);
   }
 
   async assignTab(tabId: number, sessionId: string | null): Promise<void> {
