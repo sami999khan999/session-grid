@@ -29,7 +29,7 @@ export interface Api {
   /** Chrome page bridge: a document.cookie / cookieStore write. */
   pageSetCookie: { req: { cookie: string }; res: void };
   /** Chrome page bridge: bootstrap for the sending frame. */
-  pageBootstrap: { req: {}; res: { sessionId: string | null; cookies: string; title?: string } };
+  pageBootstrap: { req: {}; res: { sessionId: string | null; cookies: string; title?: string; time?: { timeZone?: string; offset: number } } };
 }
 
 export type ApiType = keyof Api;

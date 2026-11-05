@@ -4,6 +4,7 @@ import { call } from '../../src/core/messages';
 import { SESSION_COLORS } from '../../src/core/types';
 import { mountGlassScroll } from '../../src/ui/scroll';
 import { draftSession } from '../../src/ui/sessions';
+import { SessionClock } from '../../src/ui/SessionClock';
 import { useAppState } from '../../src/ui/useAppState';
 import '../../src/ui/theme.css';
 import './style.css';
@@ -88,6 +89,7 @@ function Popup() {
                     (open || saved) > 0 && <span class={`count ${open ? 'live' : ''}`}>{open ? `${open} open` : `${saved} saved`}</span>
                   )}
                 </div>
+                <SessionClock session={s} />
                 <div class="bottom row">
                   <span class="chip">{s.tag}</span>
                   {i < 4 && <kbd>Alt+Shift+{i + 1}</kbd>}

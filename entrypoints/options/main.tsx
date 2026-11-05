@@ -4,7 +4,9 @@ import { call } from '../../src/core/messages';
 import { isValidPattern } from '../../src/core/rules';
 import { SESSION_COLORS, newId, type AppState, type Rule, type Session, type SessionColor } from '../../src/core/types';
 import { mountGlassScroll } from '../../src/ui/scroll';
-import { Select } from '../../src/ui/Select';
+import { MAX_OFFSET, formatOffset, parseOffset } from '../../src/page/time';
+import { SessionClock } from '../../src/ui/SessionClock';
+import { Select, type SelectOption } from '../../src/ui/Select';
 import { draftSession } from '../../src/ui/sessions';
 import { isFirefox, useAppState } from '../../src/ui/useAppState';
 import '../../src/ui/theme.css';
@@ -47,10 +49,46 @@ function ViewHead({ title, children, actions }: { title: string; children?: Comp
 
 // ------------------------------------------------------------------ sessions
 
+/** How far `zone` is from the browser's own time zone right now, e.g. `+5h 30m` or `same time`. */
+function zoneDiff(zone: string): string {
+  const now = Date.now();
+  const wall = (tz?: string) => {
+    const p = Object.fromEntries(
+      new Intl.DateTimeFormat('en-US', { timeZone: tz, hourCycle: 'h23', year: 'numeric', month: 'numeric', day: 'numeric', hour: 'numeric', minute: 'numeric' })
+        .formatToParts(now)
+        .map((x) => [x.type, Number(x.value)]),
+    );
+    return Date.UTC(p.year!, p.month! - 1, p.day, p.hour, p.minute);
+  };
+  const diff = wall(zone) - wall();
+  if (!diff) return 'same time';
+  const m = Math.abs(diff) / 60_000;
+  return `${diff < 0 ? '−' : '+'}${Math.floor(m / 60)}h${m % 60 ? ` ${m % 60}m` : ''}`;
+}
+
+const ZONES: SelectOption<string>[] = [
+  { value: '', label: 'Browser default' },
+  ...(Intl.supportedValuesOf?.('timeZone') ?? []).map((z) => ({ value: z, label: z.replace(/_/g, ' '), hint: zoneDiff(z) })),
+];
+const SHIFTS: [string, number][] = [
+  ['−1d', -86_400_000],
+  ['−1h', -3_600_000],
+  ['+1h', 3_600_000],
+  ['+1d', 86_400_000],
+];
+
 function SessionEditor({ session, onDone }: { session: Session; onDone: () => void }) {
   const [draft, setDraft] = useState(session);
   const dirty = JSON.stringify(draft) !== JSON.stringify(session);
+  const [shiftText, setShiftText] = useState(formatOffset(session.timeOffset ?? 0));
+  const shiftResult = parseOffset(shiftText);
+  const setShift = (ms: number) => {
+    const clamped = Math.max(-MAX_OFFSET, Math.min(MAX_OFFSET, ms));
+    setDraft({ ...draft, timeOffset: clamped || undefined });
+    setShiftText(formatOffset(clamped));
+  };
   const save = async () => {
+    if (!shiftResult.ok) return;
     if (dirty) await call('saveSession', { session: { ...draft, name: draft.name.trim() || session.name } });
     onDone();
   };
@@ -89,10 +127,53 @@ function SessionEditor({ session, onDone }: { session: Session; onDone: () => vo
           ))}
         </div>
       </div>
+      {!isFirefox && (
+        <>
+          <div class="field">
+            <span>Time zone</span>
+            <Select label="Time zone" value={draft.timeZone ?? ''} options={ZONES} onChange={(v) => setDraft({ ...draft, timeZone: v || undefined })} />
+          </div>
+          <div class="field">
+            <span id={`shift-${session.id}`}>Time shift</span>
+            <div class="row shift" role="group" aria-labelledby={`shift-${session.id}`}>
+              {SHIFTS.map(([label, ms]) => (
+                <button key={label} type="button" class="ghost small" onClick={() => setShift((draft.timeOffset ?? 0) + ms)}>
+                  {label}
+                </button>
+              ))}
+              {!!draft.timeOffset && (
+                <button type="button" class="ghost small" onClick={() => setShift(0)}>
+                  Reset
+                </button>
+              )}
+            </div>
+            <input
+              class="shift-input"
+              placeholder="+2d 3h"
+              aria-label="Time shift"
+              aria-invalid={!shiftResult.ok}
+              aria-describedby={shiftResult.ok ? undefined : `shift-help-${session.id}`}
+              value={shiftText}
+              onInput={(e) => {
+                const text = e.currentTarget.value;
+                setShiftText(text);
+                const r = parseOffset(text);
+                if (r.ok) setDraft({ ...draft, timeOffset: r.ms || undefined });
+              }}
+              onBlur={() => shiftResult.ok && setShiftText(formatOffset(draft.timeOffset ?? 0))}
+            />
+            {!shiftResult.ok && (
+              <small id={`shift-help-${session.id}`} class="error">
+                {shiftResult.error}
+              </small>
+            )}
+          </div>
+        </>
+      )}
       <div class="row foot">
         <span class="grow" />
         <button type="button" class="ghost" onClick={onDone}>Cancel</button>
-        <button type="submit" class="primary small">Save</button>
+        <button type="submit" class="primary small" disabled={!shiftResult.ok}>Save</button>
       </div>
     </form>
   );
@@ -118,6 +199,7 @@ function SessionCard({ session, index, editing, setEditing }: { session: Session
           <div class="meta row">
             <span class="chip">{session.tag}</span>
             {index < 4 && <kbd title="Opens a new tab in this session">Alt+Shift+{index + 1}</kbd>}
+            <SessionClock session={session} />
           </div>
         </div>
         {!editing && (

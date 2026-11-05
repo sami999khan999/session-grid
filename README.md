@@ -10,7 +10,7 @@ Every tab belongs to a *session* with its own cookies and site storage. Keep the
 
 ![Chrome MV3](https://img.shields.io/badge/Chrome-MV3-1f2a33?style=for-the-badge&logo=googlechrome&logoColor=e0a93f)
 ![Firefox 140+](https://img.shields.io/badge/Firefox-140%2B-1f2a33?style=for-the-badge&logo=firefoxbrowser&logoColor=e4612a)
-![Version 0.4.0](https://img.shields.io/badge/version-0.4.0-8fd14f?style=for-the-badge)
+![Version 0.4.0](https://img.shields.io/badge/version-0.5.0-8fd14f?style=for-the-badge)
 ![TypeScript](https://img.shields.io/badge/TypeScript-Preact-e0a93f?style=for-the-badge&logo=typescript&logoColor=1f2a33)
 
 <img src="docs/screenshots/popup-light.png" width="300" alt="Toolbar popup, light theme" />

@@ -189,6 +189,13 @@ export default defineBackground(() => {
     });
   });
 
+  /** Tell open pages to re-read their session's clock. */
+  async function broadcastTime() {
+    for (const tab of await browser.tabs.query({ url: ['http://*/*', 'https://*/*'] })) {
+      if (tab.id !== undefined) void browser.tabs.sendMessage(tab.id, { type: 'timeChanged' }).catch(() => {});
+    }
+  }
+
   // ------------------------------------------------------------------ API
 
   serve({
@@ -201,6 +208,7 @@ export default defineBackground(() => {
         if (i >= 0) s.sessions[i] = clean;
         else s.sessions.push(clean);
       });
+      await broadcastTime();
       return clean;
     },
 
@@ -319,8 +327,10 @@ export default defineBackground(() => {
       const boot = await chrome.pageBootstrap(sender.tab?.id, sender.url, sender.tab?.url);
       const s = await state.get();
       const sid = boot.sessionId?.split('.')[0];
-      const tag = s.prefs.titlePrefix ? s.sessions.find((x) => x.id === sid)?.tag : undefined;
-      return tag ? { ...boot, title: tag } : boot;
+      const session = s.sessions.find((x) => x.id === sid);
+      const tag = s.prefs.titlePrefix ? session?.tag : undefined;
+      const time = { timeZone: session?.timeZone, offset: session?.timeOffset ?? 0 };
+      return { ...boot, time, ...(tag ? { title: tag } : {}) };
     },
   });
 

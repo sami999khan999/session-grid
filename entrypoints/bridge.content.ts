@@ -1,4 +1,5 @@
 import { call } from '../src/core/messages';
+import { EV_TIME } from '../src/page/time';
 import { EV_SET_COOKIE, EV_SNAPSHOT, META_KEY, MODE_ATTR, RELOAD_KEY } from '../src/page/protocol';
 
 function prefixTitle(tag: string) {
@@ -53,8 +54,12 @@ export default defineContentScript({
       void call('pageSetCookie', { cookie: String((e as CustomEvent).detail ?? '') });
     });
 
+    const sendTime = (time?: { timeZone?: string; offset: number }) =>
+      document.dispatchEvent(new CustomEvent(EV_TIME, { detail: JSON.stringify(time ?? { offset: 0 }) }));
+
     const push = async () => {
-      const { sessionId, cookies, title } = await call('pageBootstrap', {});
+      const { sessionId, cookies, title, time } = await call('pageBootstrap', {});
+      sendTime(time);
       if (sessionId) document.dispatchEvent(new CustomEvent(EV_SNAPSHOT, { detail: cookies }));
       if (title && window === window.top) prefixTitle(title);
       return sessionId ?? '';
@@ -62,6 +67,7 @@ export default defineContentScript({
 
     browser.runtime.onMessage.addListener((msg: { type?: string; href?: string; fallback?: string }) => {
       if (msg?.type === 'cookiesChanged' && shimKey()) void push();
+      if (msg?.type === 'timeChanged') void call('pageBootstrap', {}).then(({ time }) => sendTime(time));
       if (msg?.type === 'favicon' && msg.href && msg.fallback && window === window.top) setFavicon(msg.href, msg.fallback);
     });
 

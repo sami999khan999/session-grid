@@ -18,6 +18,10 @@ export interface Session {
   tag: string;
   color: SessionColor;
   createdAt: number;
+  /** IANA time zone pages in this session see; absent means the browser's own. */
+  timeZone?: string;
+  /** Milliseconds the session's clock runs ahead of (or, negative, behind) real time. */
+  timeOffset?: number;
 }
 
 export interface Rule {
